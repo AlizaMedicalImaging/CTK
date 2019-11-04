@@ -14,15 +14,31 @@
    <string>Server List</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item row="0" column="0">
     <widget class="QLabel" name="CallingAETitleLabel">
      <property name="text">
-      <string>Calling AETitle</string>
+      <string>Calling AETitle:</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1" colspan="3">
-    <widget class="QLineEdit" name="CallingAETitle"/>
+    <widget class="QLineEdit" name="CallingAETitle">
+     <property name="frame">
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
    <item row="2" column="0" colspan="2">
     <widget class="QPushButton" name="AddButton">
@@ -34,22 +50,30 @@
    <item row="3" column="0">
     <widget class="QLabel" name="StorageAETitleLabel">
      <property name="text">
-      <string>Storage AETitle</string>
+      <string>Storage AETitle:</string>
      </property>
     </widget>
    </item>
    <item row="3" column="1">
-    <widget class="QLineEdit" name="StorageAETitle"/>
+    <widget class="QLineEdit" name="StorageAETitle">
+     <property name="frame">
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
    <item row="3" column="2">
     <widget class="QLabel" name="StoratePortLabel">
      <property name="text">
-      <string>Storage Port</string>
+      <string>Storage Port:</string>
      </property>
     </widget>
    </item>
    <item row="3" column="3">
-    <widget class="QLineEdit" name="StoragePort"/>
+    <widget class="QLineEdit" name="StoragePort">
+     <property name="frame">
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
    <item row="2" column="2" colspan="2">
     <widget class="QPushButton" name="RemoveButton">
@@ -63,7 +87,22 @@
      <property name="title">
       <string>Servers</string>
      </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
      <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item>
        <widget class="QTableWidget" name="NodeTable">
         <property name="columnCount">
@@ -107,6 +146,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>CallingAETitle</tabstop>
+  <tabstop>NodeTable</tabstop>
+  <tabstop>AddButton</tabstop>
+  <tabstop>StorageAETitle</tabstop>
+  <tabstop>RemoveButton</tabstop>
+  <tabstop>StoragePort</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

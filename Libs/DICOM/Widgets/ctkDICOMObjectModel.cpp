@@ -34,8 +34,10 @@
 #include "dcmtk/ofstd/ofcond.h"
 #include "dcmtk/ofstd/ofstring.h"
 #include "dcmtk/ofstd/ofstd.h"
+#include "dcmtk/dcmnet/diutil.h"
 
 // CTK DICOM Core
+#include "ctkDICOMCodecUtils.h"
 #include "ctkDICOMObjectModel.h"
 
 //------------------------------------------------------------------------------
@@ -53,7 +55,7 @@ public:
   void init();
   void itemInsert( DcmItem *dataset, QStandardItem *parent);
   void seqInsert( DcmSequenceOfItems *dataset, QStandardItem *parent);
-  QString getTagValue( DcmElement *dcmElem);
+  QString getTagValue( DcmElement *dcmElem, const char *charset=NULL);
   QStandardItem* populateModelRow(const QString& tagName,const QString& tagHexName,
   const QString& tagValue, const QString& VRName,
   const QString& elementLengthQString, QStandardItem *parent);
@@ -96,7 +98,7 @@ void ctkDICOMObjectModelPrivate::itemInsert( DcmItem *dataset, QStandardItem *pa
     // put in the visit node function
     QString tagValue = "";
     DcmTag tag = dO->getTag();
-	  // std::cout<<tag;
+    // std::cout<<tag;
     QString tagName = tag.getTagName();
     //
     DcmTagKey tagX = tag.getXTag();
@@ -118,8 +120,10 @@ void ctkDICOMObjectModelPrivate::itemInsert( DcmItem *dataset, QStandardItem *pa
       return;
       }
 
-    DcmElement *dcmElem = dynamic_cast<DcmElement *> (dO);
-    tagValue = getTagValue(dcmElem);
+    const char * charset;
+    dataset->findAndGetString(DCM_SpecificCharacterSet, charset);
+    DcmElement *dcmElem = dynamic_cast<DcmElement *>(dO);
+    tagValue = getTagValue(dcmElem, charset);
 
     // Populate QStandardModel with current DICOM element tag name and value
     QStandardItem *tagItem = populateModelRow(tagName,tagHexName,tagValue,VRName,elementLengthQString,parent);
@@ -180,36 +184,69 @@ void ctkDICOMObjectModelPrivate::seqInsert( DcmSequenceOfItems *dataset, QStanda
 }
 
 //------------------------------------------------------------------------------
-QString ctkDICOMObjectModelPrivate::getTagValue( DcmElement *dcmElem)
+QString ctkDICOMObjectModelPrivate::getTagValue(DcmElement *dcmElem, const char * charset)
 {
-  QString tagValue = "";
-  std::ostringstream value;
-  OFString part;
-  std::string sep;
   int mult = dcmElem->getVM();
-  int pos;
-
-  if( mult>1)
+  DcmTag tag = dcmElem->getTag();
+  tag.lookupVRinDictionary();
+  const DcmEVR vr        = tag.getEVR();
+  const unsigned short G = tag.getGTag();
+  const unsigned short E = tag.getETag();
+  int   pos;
+  QString tagValue(""), sep("");
+  if (mult > 1)
+  {
+    tagValue += QString("[") + QVariant(mult).toString() + QString("] ");
+  }
+  for (pos = 0; pos < mult; pos++)
+  {
+    tagValue += sep;
+    OFString part;
+    OFCondition status = dcmElem->getOFString(part, pos);
+    if(status.good())
     {
-    value << "[" << mult << "] ";
-    }
-
-  for( pos=0; pos < mult; pos++)
-    {
-    value << sep;
-    OFCondition status = dcmElem->getOFString( part, pos);
-    if( status.good())
+      if (vr == EVR_UI &&
+          !((G == 0x0008 && E == 0x0018) ||
+            (G == 0x0002 && E == 0x0003) ||
+            (G == 0x0008 && E == 0x1155) ||
+            (G == 0x0020 && E == 0x000e) ||
+            (G == 0x0020 && E == 0x000d)))
       {
-      value << part.c_str();
-      sep = ", ";
+        const char * uidName = dcmFindNameOfUID(part.c_str(), NULL);
+        if (uidName)
+        {
+          tagValue += QString::fromLatin1(uidName);
+        }
+        else
+        {
+          tagValue += QString::fromLatin1(part.c_str());
+        }
       }
-    }
-    if( pos < mult-1)
+      else if(charset &&
+              (vr == EVR_PN ||
+               vr == EVR_LO ||
+               vr == EVR_LT ||
+               vr == EVR_SH ||
+               vr == EVR_ST ||
+               vr == EVR_UC ||
+               vr == EVR_UT))
       {
-      value << " ...";
+        const QByteArray ba(part.c_str());
+        tagValue += ctkDICOMCodecUtils::toUTF8(&ba, charset);
       }
-  tagValue = value.str().c_str();
-
+      else
+      {
+        std::ostringstream value;
+        value << part;
+        tagValue += QString::fromLatin1(value.str().c_str());
+      }
+      sep = QString(", ");
+    }
+  }
+  if (pos < mult - 1)
+  {
+    tagValue += QString(" ...");
+  }
   return tagValue;
 }
 
@@ -262,20 +299,21 @@ ctkDICOMObjectModel::~ctkDICOMObjectModel()
 void ctkDICOMObjectModel::setFile(const QString &fileName)
 {
   Q_D(ctkDICOMObjectModel);
-
-  OFCondition status = d->fileFormat.loadFile( fileName.toLatin1().data());
-  if( !status.good() )
-    {
+  OFCondition status = d->fileFormat.loadFile(fileName.toLocal8Bit().constData());
+  if(!status.good())
+  {
     // TODO: Through an error message.
-    }
-
+  }
+  DcmMetaInfo *header = d->fileFormat.getMetaInfo();
   DcmDataset *dataset = d->fileFormat.getDataset();
   d->rootItem = this->invisibleRootItem();
-
   if(d->rootItem->hasChildren())
-    {
+  {
     d->rootItem->removeRows(0, d->rootItem->rowCount());
-    }
-
-  d->itemInsert( dataset, d->rootItem);
+  }
+  if (header)
+  {
+    d->itemInsert(header, d->rootItem);
+  }
+  d->itemInsert(dataset, d->rootItem);
 }

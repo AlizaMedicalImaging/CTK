@@ -55,8 +55,9 @@ public:
     QMap<QString, QString> &mergedFieldsSeries, QMap<QString, QString> &mergedFieldsStudy, QMap<QString, QString> &mergedFieldsPatient,
     const QMap<QString, QString> &emptyFieldsSeries, const QMap<QString, QString> &emptyFieldsStudy, const QMap<QString, QString> &emptyFieldsPatient );
 
-protected:
-  QString humanReadablePatientName(QString dicomPatientName);
+  /// Human readable patient name
+  static QString humanReadablePatientName(const QString&);
+
 };
 
 #endif

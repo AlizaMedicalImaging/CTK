@@ -481,7 +481,10 @@ void ctkPathLineEdit::retrieveHistory()
   bool wasBlocking = this->blockSignals(true);
   d->ComboBox->clear();
   // fill the combobox using the QSettings
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat,
+                     QSettings::UserScope,
+                     QApplication::organizationName(),
+                     QApplication::applicationName());
   QString key = d->settingKey();
   const QStringList history = settings.value(key).toStringList();
   foreach(const QString& path, history)
@@ -514,7 +517,10 @@ void ctkPathLineEdit::addCurrentPathToHistory()
     {
     return;
     }
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat,
+                     QSettings::UserScope,
+                     QApplication::organizationName(),
+                     QApplication::applicationName());
   //keep the same values, add the current value
   //if more than m_MaxHistory entrees, drop the oldest.
   QString key = d->settingKey();

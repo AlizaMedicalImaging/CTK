@@ -1,6 +1,7 @@
 # Ignore all back-up files...
 *~
 *.bak
+*.swp
 
 # Exclude Kdevelop4 files ...
 .kdev*
@@ -10,3 +11,8 @@ CMakeLists.txt.user*
 
 # ignore ctags file
 tags
+
+#tmp
+CTK.pro
+CTK.ts
+CTK.qm

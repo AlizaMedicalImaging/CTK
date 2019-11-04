@@ -606,7 +606,7 @@ QString ctkDICOMRetrieve::moveDestinationAETitle()const
   return d->MoveDestinationAETitle;
 }
 
-static void skipDelete(QObject* obj)
+static void skipDelete(QObject*)
 {
   // this deleter does not delete the object from memory
   // useful if the pointer is not owned by the smart pointer

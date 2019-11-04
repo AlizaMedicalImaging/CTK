@@ -256,7 +256,7 @@ void ctkSettingsPanelTester::testEmptyQStringList()
 
   ctkSettingsPanelForTest settingsPanel;
   ctkSettingsPanelTest2Helper * list = new ctkSettingsPanelTest2Helper(&settingsPanel);
-  settingsPanel.registerProperty("list", list, "list", SIGNAL(listChanged()));
+  settingsPanel.registerProperty("list", list, "list", SIGNAL(listChanged()), QString(), 0, 0);
   QSettings settings2(QSettings::IniFormat, QSettings::UserScope, "Common ToolKit", "CTK");
   settingsPanel.setSettings(&settings2);
 
@@ -298,7 +298,10 @@ void ctkSettingsPanelTester::testResetRestoreReloadSettings()
   ctkSettingsPanel settingsPanel;
   settingsPanel.setSettings(&settings);
   settingsPanel.registerProperty("key 1", &spinBox, "value",
-                                 SIGNAL(valueChanged(int)));
+                                 SIGNAL(valueChanged(int)),
+                                 QString(),
+                                 0,
+                                 0);
 
   QFETCH(bool, setSpinBoxValue);
   if (setSpinBoxValue)

@@ -82,18 +82,18 @@ public:
                         QObject* object,
                         const QString& objectProperty,
                         const char* propertySignal,
-                        const QString& settingLabel = QString(),
-                        SettingOptions options = OptionNone,
-                        QSettings * settings = 0);
+                        const QString& settingLabel,
+                        SettingOptions options,
+                        QSettings * settings);
 
   /// \copybrief registerProperty
   /// \overload
   Q_INVOKABLE void registerProperty(const QString& settingKey, QObject* object,
                                     const QString& objectProperty,
                                     const QByteArray& propertySignal,
-                                    const QString& settingLabel = QString(),
-                                    SettingOptions options = OptionNone,
-                                    QSettings * settings = 0);
+                                    const QString& settingLabel,
+                                    SettingOptions options,
+                                    QSettings * settings);
 
   /// Set the setting to the property defined by the key.
   /// The old value can be restored using resetSettings()

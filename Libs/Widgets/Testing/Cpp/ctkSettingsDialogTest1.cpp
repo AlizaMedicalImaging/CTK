@@ -83,7 +83,8 @@ int ctkSettingsDialogTest1(int argc, char * argv [] )
   QCheckBox* box = new QCheckBox(panel4);
   box->setChecked(false); // false by default but we just want to make sure
   panel4->registerProperty("key 1", box, "checked",
-                           SIGNAL(toggled(bool)));
+                           SIGNAL(toggled(bool)),
+                           QString(), 0, 0);
   
   QVariant boxVal = settings.value("key 1");
   if (!boxVal.isValid() || boxVal.toBool() != false)

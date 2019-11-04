@@ -102,7 +102,8 @@ int TestBoolean(ctkSettingsPanelForTest& settingsPanel)
   QCheckBox* box = new QCheckBox(&settingsPanel);
 
   settingsPanel.registerProperty("key 1", box, "checked",
-                                  SIGNAL(toggled(bool)));
+                                 SIGNAL(toggled(bool)),
+                                 QString(), 0, 0);
 
   // Check settings value after a property is registered
   QVariant boxVal = settings.value("key 1");
@@ -161,7 +162,8 @@ int TestString(ctkSettingsPanelForTest& settingsPanel)
 
   QLineEdit* lineEdit = new QLineEdit("default", &settingsPanel);
   settingsPanel.registerProperty("key 2", lineEdit, "text",
-                                  SIGNAL(textChanged(QString)));
+                                 SIGNAL(textChanged(QString)),
+                                 QString(), 0, nullptr);
 
   // Check value after a property is registered
   QVariant lineEditVal = settings.value("key 2");
@@ -249,7 +251,8 @@ int TestBooleanMapper(ctkSettingsPanelForTest& settingsPanel)
   settingsPanel.registerProperty("key complement",
                                  new ctkBooleanMapper(box, "checked", SIGNAL(toggled(bool))),
                                  "complement",
-                                  SIGNAL(complementChanged(bool)));
+                                 SIGNAL(complementChanged(bool)),
+                                 QString(), 0, nullptr);
 
   // Check settings value after a property is registered
   QVariant boxVal = settings.value("key complement");
@@ -311,7 +314,8 @@ int TestStringList(ctkSettingsPanelForTest& settingsPanel)
 
   ctkSettingsPanelTest2Helper* list = new ctkSettingsPanelTest2Helper(&settingsPanel);
   settingsPanel.registerProperty("key list", list, "list",
-                                 SIGNAL(listChanged()));
+                                 SIGNAL(listChanged()),
+                                 QString(), 0, nullptr);
 
   // Check value after a property is registered
   QVariant listVal = settings.value("key list");

@@ -100,7 +100,7 @@ mark_as_superbuild(
 #-----------------------------------------------------------------------------
 # Superbuild Option - Enabled by default
 #
-option(CTK_SUPERBUILD "Build ${PROJECT_NAME} and the projects it depends on." ON)
+option(CTK_SUPERBUILD "Build ${PROJECT_NAME} and the projects it depends on." OFF)
 mark_as_advanced(CTK_SUPERBUILD)
 
 #-----------------------------------------------------------------------------
@@ -468,7 +468,7 @@ mark_as_advanced(CTK_USE_KWSTYLE)
 mark_as_superbuild(CTK_USE_KWSTYLE)
 
 # Qt Designer Plugins
-option(CTK_BUILD_QTDESIGNER_PLUGINS "Build Qt Designer plugins" ON)
+option(CTK_BUILD_QTDESIGNER_PLUGINS "Build Qt Designer plugins" OFF)
 mark_as_advanced(CTK_BUILD_QTDESIGNER_PLUGINS)
 mark_as_superbuild(CTK_BUILD_QTDESIGNER_PLUGINS)
 
@@ -553,9 +553,12 @@ ctk_app_option(ctkDICOM
                "Build the DICOM example application" OFF
                CTK_ENABLE_DICOM AND CTK_BUILD_EXAMPLES)
 
-
 ctk_app_option(ctkDICOM2
                "Build the new DICOM example application (experimental)" OFF
+               CTK_ENABLE_DICOM AND CTK_BUILD_EXAMPLES)
+
+ctk_app_option(AlizaCTK
+               "Build AlizaCTK" ON
                CTK_ENABLE_DICOM AND CTK_BUILD_EXAMPLES)
 
 ctk_app_option(ctkDICOMIndexer

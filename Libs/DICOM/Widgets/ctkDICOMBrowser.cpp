@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFile>
+#include <QDir>
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QFormLayout>
@@ -40,6 +41,8 @@
 #include <QStringListModel>
 #include <QTableView>
 #include <QWidgetAction>
+#include <QtGlobal>
+#include <QObject>
 
 // ctkWidgets includes
 #include "ctkDirectoryButton.h"
@@ -132,23 +135,22 @@ public:
 
   void importOldSettings();
 
+  void showUpdateSchemaDialog();
+
   ctkFileDialog* ImportDialog;
   ctkDICOMMetadataDialog* MetadataDialog;
-
   ctkDICOMQueryRetrieveWidget* QueryRetrieveWidget;
 
   QSharedPointer<ctkDICOMDatabase> DICOMDatabase;
   QSharedPointer<ctkDICOMIndexer> DICOMIndexer;
+
   QProgressDialog *UpdateSchemaProgress;
   QProgressDialog *UpdateDisplayedFieldsProgress;
   QProgressDialog *ExportProgress;
 
-  void showUpdateSchemaDialog();
-
   bool DisplayImportSummary;
   bool ConfirmRemove;
   bool ShemaUpdateAutoCreateDirectory;
-  bool SendActionVisible;
 
   // local count variables to keep track of the number of items
   // added to the database during an import operation
@@ -157,14 +159,16 @@ public:
   int SeriesAddedDuringImport;
   int InstancesAddedDuringImport;
 
+  bool SendActionVisible;
+  bool BatchUpdateBeforeIndexingUpdate;
+
   // Settings key that stores database directory
   QString DatabaseDirectorySettingsKey;
 
-  // Default database path to use if there is nothing in settings
-  QString DefaultDatabaseDirectory;
   QString DatabaseDirectory;
 
-  bool BatchUpdateBeforeIndexingUpdate;
+  // Default database path to use if there is nothing in settings
+  QString DefaultDatabaseDirectory;
 };
 
 CTK_GET_CPP(ctkDICOMBrowser, bool, isSendActionVisible, SendActionVisible);
@@ -190,9 +194,9 @@ ctkDICOMBrowserPrivate::ctkDICOMBrowserPrivate(ctkDICOMBrowser* parent, QSharedP
   , StudiesAddedDuringImport(0)
   , SeriesAddedDuringImport(0)
   , InstancesAddedDuringImport(0)
-  , DefaultDatabaseDirectory("./ctkDICOM-Database")
   , SendActionVisible(false)
   , BatchUpdateBeforeIndexingUpdate(false)
+  , DefaultDatabaseDirectory("./ctkDICOM-Database")
 {
   if (this->DICOMDatabase.isNull())
   {
@@ -228,10 +232,10 @@ void ctkDICOMBrowserPrivate::showUpdateSchemaDialog()
     // Set up the Update Schema Progress Dialog
     //
     UpdateSchemaProgress = new QProgressDialog(
-      q->tr("DICOM Schema Update"), "Cancel", 0, 100, q, Qt::WindowTitleHint | Qt::WindowSystemMenuHint);
+      QObject::tr("DICOM Schema Update"), QObject::tr("Cancel"), 0, 100, q, Qt::WindowTitleHint | Qt::WindowSystemMenuHint);
 
     // We don't want the progress dialog to resize itself, so we bypass the label by creating our own
-    QLabel* progressLabel = new QLabel(q->tr("Initialization..."));
+    QLabel* progressLabel = new QLabel(QObject::tr("Initialization"));
     UpdateSchemaProgress->setLabel(progressLabel);
     UpdateSchemaProgress->setWindowModality(Qt::ApplicationModal);
     UpdateSchemaProgress->setMinimumDuration(0);
@@ -294,7 +298,7 @@ void ctkDICOMBrowserPrivate::init()
 
   // Initialize Q/R widget
   this->QueryRetrieveWidget = new ctkDICOMQueryRetrieveWidget();
-  this->QueryRetrieveWidget->setWindowModality ( Qt::ApplicationModal );
+  this->QueryRetrieveWidget->setWindowModality(Qt::ApplicationModal);
   this->QueryRetrieveWidget->useProgressDialog(true);
   
   this->dicomTableManager->setDICOMDatabase(this->DICOMDatabase.data());
@@ -326,19 +330,19 @@ void ctkDICOMBrowserPrivate::init()
   // Initialize directoryMode widget
   QFormLayout *layout = new QFormLayout;
   QComboBox* importDirectoryModeComboBox = new QComboBox();
-  importDirectoryModeComboBox->addItem("Add Link", ctkDICOMBrowser::ImportDirectoryAddLink);
-  importDirectoryModeComboBox->addItem("Copy", ctkDICOMBrowser::ImportDirectoryCopy);
+  importDirectoryModeComboBox->addItem(QObject::tr("Add Link"), QVariant(static_cast<unsigned int>(ctkDICOMBrowser::ImportDirectoryAddLink)));
+  importDirectoryModeComboBox->addItem(QObject::tr("Copy"), QVariant(static_cast<unsigned int>(ctkDICOMBrowser::ImportDirectoryCopy)));
   importDirectoryModeComboBox->setToolTip(
         QObject::tr("Indicate if the files should be copied to the local database"
-           " directory or if only links should be created ?"));
-  layout->addRow(new QLabel("Import Directory Mode:"), importDirectoryModeComboBox);
+           " directory or if only links should be created?"));
+  layout->addRow(new QLabel(QObject::tr("Import Directory Mode")), importDirectoryModeComboBox);
   layout->setContentsMargins(0, 0, 0, 0);
   QWidget* importDirectoryBottomWidget = new QWidget();
   importDirectoryBottomWidget->setLayout(layout);
 
   // Default values
   importDirectoryModeComboBox->setCurrentIndex(
-        importDirectoryModeComboBox->findData(q->importDirectoryMode()));
+        importDirectoryModeComboBox->findData(static_cast<unsigned int>(q->importDirectoryMode())));
 
   //Initialize import widget
   this->ImportDialog = new ctkFileDialog();
@@ -346,13 +350,13 @@ void ctkDICOMBrowserPrivate::init()
   this->ImportDialog->setFileMode(QFileDialog::Directory);
   // XXX Method setSelectionMode must be called after setFileMode
   this->ImportDialog->setSelectionMode(QAbstractItemView::ExtendedSelection);
-  this->ImportDialog->setLabelText(QFileDialog::Accept,"Import");
-  this->ImportDialog->setWindowTitle("Import DICOM files from directory ...");
+  this->ImportDialog->setLabelText(QFileDialog::Accept, QObject::tr("Import"));
+  this->ImportDialog->setWindowTitle(QObject::tr("Import DICOM files from directory"));
   this->ImportDialog->setWindowModality(Qt::ApplicationModal);
 
   this->MetadataDialog = new ctkDICOMMetadataDialog();
   this->MetadataDialog->setObjectName("DICOMMetadata");
-  this->MetadataDialog->setWindowTitle("DICOM File Metadata");
+  this->MetadataDialog->setWindowTitle(QObject::tr("DICOM File Metadata"));
 
   //connect signal and slots
   q->connect(this->ImportDialog, SIGNAL(filesSelected(QStringList)),
@@ -475,7 +479,11 @@ void ctkDICOMBrowser::createNewDatabaseDirectory()
   {
     // only use existing folder name as a basis if it is empty or
     // a valid database
+#if QT_VERSION >= 0x050900
     if (!QDir(baseFolder).isEmpty())
+#else
+    if (QDir(baseFolder).entryList(QDir::NoDotAndDotDot).count() > 0)
+#endif
     {
       QString databaseFileName = baseFolder + QString("/ctkDICOM.sql");
       if (!QFile(databaseFileName).exists())
@@ -522,7 +530,11 @@ void ctkDICOMBrowser::createNewDatabaseDirectory()
         continue;
       }
     }
+#if QT_VERSION >= 0x050900
     if (!QDir(newFolder).isEmpty())
+#else
+    if (QDir(newFolder).entryList(QDir::NoDotAndDotDot).count() > 0)
+#endif
     {
       continue;
     }
@@ -533,7 +545,9 @@ void ctkDICOMBrowser::createNewDatabaseDirectory()
   std::cerr << "Failed to create new database in folder: " << qPrintable(baseFolder) << "\n";
   d->InformationMessageFrame->hide();
   d->DatabaseDirectoryProblemFrame->show();
-  d->DatabaseDirectoryProblemLabel->setText(tr("Failed to create new database in folder %1.").arg(QDir(baseFolder).absolutePath()));
+  d->DatabaseDirectoryProblemLabel->setText(
+    tr("Failed to create new database in folder") +
+    QString(" %1.").arg(QDir(baseFolder).absolutePath()));
   d->UpdateDatabaseButton->hide();
   d->CreateNewDatabaseButton->show();
   d->SelectDatabaseDirectoryButton->show();
@@ -553,7 +567,7 @@ void ctkDICOMBrowser::updateDatabase()
   {
     d->DICOMDatabase->openDatabase(databaseFileName);
   }
-  catch (std::exception e)
+  catch (std::exception &)
   {
     std::cerr << "Database error: " << qPrintable(d->DICOMDatabase->lastError()) << "\n";
     d->DICOMDatabase->closeDatabase();
@@ -580,18 +594,24 @@ void ctkDICOMBrowser::setDatabaseDirectory(const QString& directory)
 
   bool success = true;
 
-  if (!QDir(directory).exists()
-    || (!QDir(directory).isEmpty() && !QFile(databaseFileName).exists()))
+  if (!QDir(directory).exists() || (
+#if QT_VERSION >= 0x050900
+        !QDir(directory).isEmpty()
+#else
+        QDir(directory).entryList(QDir::NoDotAndDotDot).count() > 0
+#endif
+        && !QFile(databaseFileName).exists()))
   {
     std::cerr << "Database folder does not contain ctkDICOM.sql file: " << qPrintable(absDirectory) << "\n";
     d->DatabaseDirectoryProblemFrame->show();
-    d->DatabaseDirectoryProblemLabel->setText(tr("No valid DICOM database found in folder %1.").arg(absDirectory));
+    d->DatabaseDirectoryProblemLabel->setText(
+      tr("No valid DICOM database found in folder") +
+      QString(" %1.").arg(absDirectory));
     d->UpdateDatabaseButton->hide();
     d->CreateNewDatabaseButton->show();
     d->SelectDatabaseDirectoryButton->show();
     success = false;
   }
-
   if (success)
   {
     bool databaseOpenSuccess = false;
@@ -600,7 +620,7 @@ void ctkDICOMBrowser::setDatabaseDirectory(const QString& directory)
       d->DICOMDatabase->openDatabase(databaseFileName);
       databaseOpenSuccess = d->DICOMDatabase->isOpen();
     }
-    catch (std::exception e)
+    catch (std::exception &)
     {
       databaseOpenSuccess = false;
     }
@@ -609,7 +629,9 @@ void ctkDICOMBrowser::setDatabaseDirectory(const QString& directory)
       std::cerr << "Database error: " << qPrintable(d->DICOMDatabase->lastError()) << "\n";
       d->DICOMDatabase->closeDatabase();
       d->DatabaseDirectoryProblemFrame->show();
-      d->DatabaseDirectoryProblemLabel->setText(tr("No valid DICOM database found in folder %1.").arg(absDirectory));
+      d->DatabaseDirectoryProblemLabel->setText(
+        tr("No valid DICOM database found in folder") +
+        QString(" %1.").arg(absDirectory));
       d->UpdateDatabaseButton->hide();
       d->CreateNewDatabaseButton->show();
       d->SelectDatabaseDirectoryButton->show();
@@ -627,7 +649,8 @@ void ctkDICOMBrowser::setDatabaseDirectory(const QString& directory)
       d->DICOMDatabase->closeDatabase();
       d->DatabaseDirectoryProblemFrame->show();
       d->DatabaseDirectoryProblemLabel->setText(
-        tr("Incompatible DICOM database version found in folder %1.").arg(absDirectory));
+        tr("Incompatible DICOM database version found in folder") +
+        QString(" %1.").arg(absDirectory));
       d->UpdateDatabaseButton->show();
       d->CreateNewDatabaseButton->show();
       d->SelectDatabaseDirectoryButton->show();
@@ -642,7 +665,7 @@ void ctkDICOMBrowser::setDatabaseDirectory(const QString& directory)
 
   // Save new database directory in this object and in application settings.
   d->DatabaseDirectory = directory;
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, QApplication::organizationName(), QApplication::applicationName());
   if (!d->DatabaseDirectorySettingsKey.isEmpty())
   {
     settings.setValue(d->DatabaseDirectorySettingsKey, directory);
@@ -684,7 +707,7 @@ void ctkDICOMBrowser::setDatabaseDirectorySettingsKey(const QString& key)
   Q_D(ctkDICOMBrowser);
   d->DatabaseDirectorySettingsKey = key;
 
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, QApplication::organizationName(), QApplication::applicationName());
   QString databaseDirectory = settings.value(d->DatabaseDirectorySettingsKey, "").toString();
   this->setDatabaseDirectory(databaseDirectory);
 }
@@ -769,7 +792,7 @@ void ctkDICOMBrowser::onRepairAction()
 
   QMessageBox* repairMessageBox;
   repairMessageBox = new QMessageBox;
-  repairMessageBox->setWindowTitle("Database Repair");
+  repairMessageBox->setWindowTitle(tr("Database Repair"));
 
   QStringList allFiles(d->DICOMDatabase->allFiles());
 
@@ -794,7 +817,7 @@ void ctkDICOMBrowser::onRepairAction()
     d->DICOMDatabase->updateDisplayedFields();
     d->dicomTableManager->setBatchUpdate(wasBatchUpdate);
 
-    repairMessageBox->setText("All the files in the local database are available.");
+    repairMessageBox->setText(tr("All the files in the local database are available"));
     repairMessageBox->addButton(QMessageBox::Ok);
     repairMessageBox->exec();
   }
@@ -816,11 +839,12 @@ void ctkDICOMBrowser::onRepairAction()
       QString firstFile (*(fileList.constBegin()));
       QHash<QString,QString> descriptions (d->DICOMDatabase->descriptionsForFile(firstFile));
 
-      repairMessageBox->setText("The files for the following series are not available on the disk: \nPatient Name: "
-        + descriptions["PatientsName"]+ "\n"+
-        "Study Desciption: " + descriptions["StudyDescription"]+ "\n"+
-        "Series Desciption: " + descriptions["SeriesDescription"]+ "\n"+
-        "Do you want to remove the series from the DICOM database? ");
+      repairMessageBox->setText(
+        tr("The files for the following series are not available on the disk:") + "\n" +
+        tr("Patient Name")      + ": " + descriptions["PatientsName"]           + "\n" +
+        tr("Study Desciption")  + ": " + descriptions["StudyDescription"]       + "\n" +
+        tr("Series Desciption") + ": " + descriptions["SeriesDescription"]      + "\n" +
+        tr("Do you want to remove the series from the DICOM database?"));
 
       repairMessageBox->setDetailedText(unavailableFileNames);
 
@@ -838,7 +862,13 @@ void ctkDICOMBrowser::onRepairAction()
   }
 
   // Force refresh of table views
+#if  QT_VERSION >= 0x050000
   d->DICOMDatabase->databaseChanged();
+#else
+#ifndef _MSC_VER
+#warning "FIXME"
+#endif
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -954,7 +984,7 @@ void ctkDICOMBrowserPrivate::importDirectory(QString directory, ctkDICOMBrowser:
 void ctkDICOMBrowserPrivate::importOldSettings()
 {
   // Backward compatibility
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, QApplication::organizationName(), QApplication::applicationName());
   int dontConfirmCopyOnImport = settings.value("MainWindow/DontConfirmCopyOnImport", static_cast<int>(QMessageBox::InvalidRole)).toInt();
   if (dontConfirmCopyOnImport == QMessageBox::AcceptRole)
   {
@@ -976,7 +1006,7 @@ ctkDICOMBrowser::ImportDirectoryMode ctkDICOMBrowser::importDirectoryMode()const
   Q_D(const ctkDICOMBrowser);
   ctkDICOMBrowserPrivate* mutable_d = const_cast<ctkDICOMBrowserPrivate*>(d);
   mutable_d->importOldSettings();
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, QApplication::organizationName(), QApplication::applicationName());
   return static_cast<ctkDICOMBrowser::ImportDirectoryMode>(settings.value(
     "DICOM/ImportDirectoryMode", static_cast<int>(ctkDICOMBrowser::ImportDirectoryAddLink)).toInt() );
 }
@@ -986,14 +1016,14 @@ void ctkDICOMBrowser::setImportDirectoryMode(ctkDICOMBrowser::ImportDirectoryMod
 {
   Q_D(ctkDICOMBrowser);
 
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, QApplication::organizationName(), QApplication::applicationName());
   settings.setValue("DICOM/ImportDirectoryMode", static_cast<int>(mode));
   if (!d->ImportDialog)
   {
     return;
   }
   QComboBox* comboBox = d->ImportDialog->bottomWidget()->findChild<QComboBox*>();
-  comboBox->setCurrentIndex(comboBox->findData(mode));
+  comboBox->setCurrentIndex(comboBox->findData(static_cast<unsigned int>(mode)));
 }
 
 //----------------------------------------------------------------------------
@@ -1018,7 +1048,7 @@ bool ctkDICOMBrowser::confirmDeleteSelectedUIDs(QStringList uids)
   }
 
   ctkMessageBox confirmDeleteDialog;
-  QString message("Do you want to delete the following selected items?");
+  QString message(tr("Do you want to delete the following selected items?"));
 
   // add the information about the selected UIDs
   int numUIDs = uids.size();
@@ -1052,8 +1082,8 @@ bool ctkDICOMBrowser::confirmDeleteSelectedUIDs(QStringList uids)
   confirmDeleteDialog.setText(message);
   confirmDeleteDialog.setIcon(QMessageBox::Question);
 
-  confirmDeleteDialog.addButton("Delete", QMessageBox::AcceptRole);
-  confirmDeleteDialog.addButton("Cancel", QMessageBox::RejectRole);
+  confirmDeleteDialog.addButton(tr("Delete"), QMessageBox::AcceptRole);
+  confirmDeleteDialog.addButton(tr("Cancel"), QMessageBox::RejectRole);
   confirmDeleteDialog.setDontShowAgainSettingsKey( "MainWindow/DontConfirmDeleteSelected");
 
   int response = confirmDeleteDialog.exec();
@@ -1086,26 +1116,26 @@ void ctkDICOMBrowser::onPatientsRightClicked(const QPoint &point)
   QString selectedPatientsCount;
   if (numPatients > 1)
   {
-    selectedPatientsCount = QString(" %1 selected patients").arg(numPatients);
+    selectedPatientsCount = QString("%1 ").arg(numPatients) + tr("selected patients");
   }
 
-  QString metadataString = QString("View DICOM metadata");
+  QString metadataString = QString(tr("View DICOM metadata"));
   if (numPatients > 1)
   {
-    metadataString += QString(" of") + selectedPatientsCount;
+    metadataString += " " + tr("of") + " " + selectedPatientsCount;
   }
   QAction *metadataAction = new QAction(metadataString, patientsMenu);
   patientsMenu->addAction(metadataAction);
 
-  QString deleteString = QString("Delete") + selectedPatientsCount;
+  QString deleteString = tr("Delete") + selectedPatientsCount;
   QAction *deleteAction = new QAction(deleteString, patientsMenu);
   patientsMenu->addAction(deleteAction);
 
-  QString exportString = QString("Export%1 to file system").arg(selectedPatientsCount);
+  QString exportString = tr("Export") + QString(" %1 ").arg(selectedPatientsCount) + tr("to file system");
   QAction *exportAction = new QAction(exportString, patientsMenu);
   patientsMenu->addAction(exportAction);
 
-  QString sendString = QString("Send%1 to DICOM server").arg(selectedPatientsCount);
+  QString sendString = tr("Send") + QString(" %1 ").arg(selectedPatientsCount) + tr("to DICOM server");
   QAction* sendAction = new QAction(sendString, patientsMenu);
   if (this->isSendActionVisible())
   {
@@ -1152,26 +1182,26 @@ void ctkDICOMBrowser::onStudiesRightClicked(const QPoint &point)
   QString selectedStudiesCount;
   if (numStudies > 1)
   {
-    selectedStudiesCount = QString(" %1 selected studies").arg(numStudies);
+    selectedStudiesCount = QString("%1 ").arg(numStudies) + tr("selected studies");
   }
 
-  QString metadataString = QString("View DICOM metadata");
+  QString metadataString = tr("View DICOM metadata");
   if (numStudies > 1)
   {
-    metadataString += QString(" of") + selectedStudiesCount;
+    metadataString += " " + tr("of") + " " + selectedStudiesCount;
   }
   QAction *metadataAction = new QAction(metadataString, studiesMenu);
   studiesMenu->addAction(metadataAction);
 
-  QString deleteString = QString("Delete") + selectedStudiesCount;
+  QString deleteString = tr("Delete") + selectedStudiesCount;
   QAction *deleteAction = new QAction(deleteString, studiesMenu);
   studiesMenu->addAction(deleteAction);
 
-  QString exportString = QString("Export%1 to file system").arg(selectedStudiesCount);
+  QString exportString = tr("Export") + QString(" %1 ").arg(selectedStudiesCount) + tr("to file system");
   QAction *exportAction = new QAction(exportString, studiesMenu);
   studiesMenu->addAction(exportAction);
 
-  QString sendString = QString("Send%1 to DICOM server").arg(selectedStudiesCount);
+  QString sendString = tr("Send") + QString(" %1 ").arg(selectedStudiesCount) + tr("to DICOM server");
   QAction* sendAction = new QAction(sendString, studiesMenu);
   if (this->isSendActionVisible())
   {
@@ -1223,26 +1253,26 @@ void ctkDICOMBrowser::onSeriesRightClicked(const QPoint &point)
   QString selectedSeriesCount;
   if (numSeries > 1)
   {
-    selectedSeriesCount = QString(" %1 selected series").arg(numSeries);
+    selectedSeriesCount = QString("%1 ").arg(numSeries) + tr("selected series");
 
   }
-  QString metadataString = QString("View DICOM metadata");
+  QString metadataString = tr("View DICOM metadata");
   if (numSeries > 1)
   {
-    metadataString += QString(" of") + selectedSeriesCount;
+    metadataString += " " + tr("of") + selectedSeriesCount;
   }
   QAction *metadataAction = new QAction(metadataString, seriesMenu);
   seriesMenu->addAction(metadataAction);
 
-  QString deleteString = QString("Delete") + selectedSeriesCount;
+  QString deleteString = tr("Delete") + selectedSeriesCount;
   QAction *deleteAction = new QAction(deleteString, seriesMenu);
   seriesMenu->addAction(deleteAction);
 
-  QString exportString = QString("Export%1 to file system").arg(selectedSeriesCount);
+  QString exportString = tr("Export") + QString(" %1 ").arg(selectedSeriesCount) + tr("to file system");
   QAction *exportAction = new QAction(exportString, seriesMenu);
   seriesMenu->addAction(exportAction);
 
-  QString sendString = QString("Send%1 to DICOM server").arg(selectedSeriesCount);
+  QString sendString = tr("Send") + QString(" %1 ").arg(selectedSeriesCount) + tr("to DICOM server");
   QAction* sendAction = new QAction(sendString, seriesMenu);
   if (this->isSendActionVisible())
   {
@@ -1280,6 +1310,9 @@ void ctkDICOMBrowser::onSeriesRightClicked(const QPoint &point)
 //----------------------------------------------------------------------------
 void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
 {
+#ifndef _MSC_VER
+#warning "TODO exportSeries"
+#endif
   Q_D(ctkDICOMBrowser);
 
   foreach (const QString& uid, uids)
@@ -1301,7 +1334,7 @@ void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
 
     QString sep = "/";
     QString nameSep = "-";
-    QString destinationDir = dirPath + sep + patientID;
+    QString destinationDir = dirPath + sep + patientID; // QDateTime::currentDateTime().toString("yyyyMMddHHmmsszzz");
     if (!patientName.isEmpty())
     {
       destinationDir += nameSep + patientName;
@@ -1330,9 +1363,9 @@ void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
       if (!QDir().mkpath(destinationDir))
       {
         QString errorString =
-          QString("Unable to create export destination directory:\n\n")
-          + destinationDir
-          + QString("\n\nHalting export.");
+          tr("Unable to create export destination directory")
+          + ":\n\n" + destinationDir
+          + "\n\n" + tr("Halting export");
         ctkMessageBox createDirectoryErrorMessageBox;
         createDirectoryErrorMessageBox.setText(errorString);
         createDirectoryErrorMessageBox.setIcon(QMessageBox::Warning);
@@ -1344,11 +1377,11 @@ void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
     // show progress
     if (d->ExportProgress == 0)
     {
-      d->ExportProgress = new QProgressDialog(this->tr("DICOM Export"), "Close", 0, 100, this, Qt::WindowTitleHint | Qt::WindowSystemMenuHint);
+      d->ExportProgress = new QProgressDialog(tr("DICOM Export"), tr("Close"), 0, 100, this, Qt::WindowTitleHint | Qt::WindowSystemMenuHint);
       d->ExportProgress->setWindowModality(Qt::ApplicationModal);
       d->ExportProgress->setMinimumDuration(0);
     }
-    QLabel *exportLabel = new QLabel(this->tr("Exporting series ") + seriesNumber);
+    QLabel *exportLabel = new QLabel(tr("Exporting series") + " " + seriesNumber);
     d->ExportProgress->setLabel(exportLabel);
     d->ExportProgress->setValue(0);
 
@@ -1374,9 +1407,9 @@ void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
       if (!QFile::exists(filePath))
       {
         d->ExportProgress->setValue(numFiles);
-        QString errorString = QString("Export source file not found:\n\n")
+        QString errorString = tr("Export source file not found") + "\n\n"
           + filePath
-          + QString("\n\nHalting export.\n\nError may be fixed via Repair.");
+          + "\n\n" + tr("Halting export") + "\n\n" + tr("Error may be fixed via Repair");
         ctkMessageBox copyErrorMessageBox;
         copyErrorMessageBox.setText(errorString);
         copyErrorMessageBox.setIcon(QMessageBox::Warning);
@@ -1386,9 +1419,9 @@ void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
       if (QFile::exists(destinationFileName))
       {
         d->ExportProgress->setValue(numFiles);
-        QString errorString = QString("Export destination file already exists:\n\n")
+        QString errorString = tr("Export destination file already exists") + "\n\n"
           + destinationFileName
-          + QString("\n\nHalting export.");
+          + "\n\n" + tr("Halting export");
         ctkMessageBox copyErrorMessageBox;
         copyErrorMessageBox.setText(errorString);
         copyErrorMessageBox.setIcon(QMessageBox::Warning);
@@ -1400,11 +1433,11 @@ void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
       if (!copyResult)
       {
         d->ExportProgress->setValue(numFiles);
-        QString errorString = QString("Failed to copy\n\n")
+        QString errorString = tr("Failed to copy") + "\n\n"
           + filePath
-          + QString("\n\nto\n\n")
+          + "\n\n" + tr("to") + "\n\n"
           + destinationFileName
-          + QString("\n\nHalting export.");
+          + "\n\n" + tr("Halting export");
         ctkMessageBox copyErrorMessageBox;
         copyErrorMessageBox.setText(errorString);
         copyErrorMessageBox.setIcon(QMessageBox::Warning);
@@ -1431,7 +1464,7 @@ void ctkDICOMBrowser::showUpdateDisplayedFieldsDialog()
     d->UpdateDisplayedFieldsProgress = new QProgressDialog(this, Qt::WindowTitleHint | Qt::WindowSystemMenuHint);
 
     // We don't want the progress dialog to resize itself, so we bypass the label by creating our own
-    d->UpdateDisplayedFieldsProgress->setLabelText("Updating database displayed fields...");
+    d->UpdateDisplayedFieldsProgress->setLabelText(tr("Updating database displayed fields"));
     d->UpdateDisplayedFieldsProgress->setWindowModality(Qt::ApplicationModal);
     d->UpdateDisplayedFieldsProgress->setMinimumDuration(0);
     d->UpdateDisplayedFieldsProgress->setMaximum(5);
@@ -1699,11 +1732,12 @@ void ctkDICOMBrowser::onIndexingComplete(int patientsAdded, int studiesAdded, in
 
   if (d->DisplayImportSummary)
   {
-    QString message = QString("Import completed: added %1 patients, %2 studies, %3 series, %4 instances.")
-      .arg(QString::number(patientsAdded))
-      .arg(QString::number(studiesAdded))
-      .arg(QString::number(seriesAdded))
-      .arg(QString::number(imagesAdded));
+    QString message =
+      tr("Import completed: added  %1 patients, %2 studies, %3 series, %4 instances")
+        .arg(QString::number(patientsAdded))
+        .arg(QString::number(studiesAdded))
+        .arg(QString::number(seriesAdded))
+        .arg(QString::number(imagesAdded));
     d->InformationMessageLabel->setText(message);
     d->InformationMessageFrame->show();
   }

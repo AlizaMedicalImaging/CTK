@@ -29,6 +29,8 @@
 #include <QResizeEvent>
 #include <QSplitter>
 #include <QTableView>
+#include <QColor>
+#include <QApplication>
 
 class ctkDICOMTableManagerPrivate : public Ui_ctkDICOMTableManager
 {
@@ -146,7 +148,7 @@ void ctkDICOMTableManagerPrivate::init()
   QObject::connect(this->seriesTable, SIGNAL(customContextMenuRequested(const QPoint&)),
                    q, SIGNAL(seriesRightClicked(const QPoint&)));
 
-  q->setTableOrientation(this->tableSplitter->orientation());
+  q->setTableOrientation(Qt::Vertical);
 }
 
 //------------------------------------------------------------------------------
@@ -174,11 +176,11 @@ void ctkDICOMTableManagerPrivate::showFilterActiveWarning(ctkSearchBox* searchBo
   QPalette palette;
   if (showWarning)
   {
-    palette.setColor(QPalette::Base, Qt::yellow);
+    palette.setColor(QPalette::Base, QColor(115,115,70,255));
   }
   else
   {
-    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::Base, QApplication::palette().color(QPalette::Base));
   }
   searchBox->setPalette(palette);
 }
@@ -223,6 +225,7 @@ void ctkDICOMTableManager::setTableOrientation(const Qt::Orientation &o)
 {
   Q_D(ctkDICOMTableManager);
   d->tableSplitter->setOrientation(o);
+
   d->collapseTopHeader(o == Qt::Vertical);
 }
 
@@ -435,8 +438,10 @@ void ctkDICOMTableManager::resizeEvent(QResizeEvent *e)
   if (!d->m_DynamicTableLayout)
     return;
 
+#if 0
   // If the table is 2x wider than tall then use horizontal layout
   this->setTableOrientation(e->size().width() > 2 * e->size().height() ? Qt::Horizontal : Qt::Vertical);
+#endif
 }
 
 //------------------------------------------------------------------------------

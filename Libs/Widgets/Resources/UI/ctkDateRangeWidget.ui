@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>167</width>
-    <height>186</height>
+    <width>195</width>
+    <height>268</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,13 +20,28 @@
    <string>Date Range</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="margin">
-    <number>0</number>
+   <property name="spacing">
+    <number>6</number>
+   </property>
+   <property name="leftMargin">
+    <number>6</number>
+   </property>
+   <property name="topMargin">
+    <number>6</number>
+   </property>
+   <property name="rightMargin">
+    <number>6</number>
+   </property>
+   <property name="bottomMargin">
+    <number>6</number>
    </property>
    <item>
     <widget class="QRadioButton" name="AnyDateRadioButton">
      <property name="text">
       <string>Any Date</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -70,6 +85,9 @@
    </item>
    <item>
     <widget class="QFrame" name="DateRangeWidget">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -77,13 +95,19 @@
       </sizepolicy>
      </property>
      <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
+      <enum>QFrame::NoFrame</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Plain</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
       <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
        <number>0</number>
       </property>
       <property name="bottomMargin">
@@ -91,6 +115,9 @@
       </property>
       <item>
        <widget class="QDateTimeEdit" name="StartDate">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="calendarPopup">
          <bool>true</bool>
         </property>
@@ -98,6 +125,9 @@
       </item>
       <item>
        <widget class="QDateTimeEdit" name="EndDate">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="calendarPopup">
          <bool>true</bool>
         </property>
@@ -111,18 +141,18 @@
  <resources/>
  <connections>
   <connection>
-   <sender>AnyDateRadioButton</sender>
+   <sender>SelectRangeRadioButton</sender>
    <signal>toggled(bool)</signal>
    <receiver>DateRangeWidget</receiver>
-   <slot>setHidden(bool)</slot>
+   <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>83</x>
-     <y>8</y>
+     <x>89</x>
+     <y>178</y>
     </hint>
     <hint type="destinationlabel">
-     <x>43</x>
-     <y>162</y>
+     <x>89</x>
+     <y>226</y>
     </hint>
    </hints>
   </connection>

@@ -57,8 +57,8 @@ QStringList ctkDICOMDisplayedFieldGeneratorRadiotherapySeriesDescriptionRule::ge
 //------------------------------------------------------------------------------
 void ctkDICOMDisplayedFieldGeneratorRadiotherapySeriesDescriptionRule::registerEmptyFieldNames(
   QMap<QString, QString> emptyFieldsDisplaySeries,
-  QMap<QString, QString> emptyFieldsDisplayStudies,
-  QMap<QString, QString> emptyFieldsDisplayPatients )
+  QMap<QString, QString> /* emptyFieldsDisplayStudies */,
+  QMap<QString, QString> /* emptyFieldsDisplayPatients */ )
 {
   emptyFieldsDisplaySeries.insertMulti("SeriesDescription", this->EmptySeriesDescriptionRtPlan);
   emptyFieldsDisplaySeries.insertMulti("SeriesDescription", this->EmptySeriesDescriptionRtStruct);
@@ -68,7 +68,7 @@ void ctkDICOMDisplayedFieldGeneratorRadiotherapySeriesDescriptionRule::registerE
 //------------------------------------------------------------------------------
 void ctkDICOMDisplayedFieldGeneratorRadiotherapySeriesDescriptionRule::getDisplayedFieldsForInstance(
   const QMap<QString, QString> &cachedTagsForInstance, QMap<QString, QString> &displayedFieldsForCurrentSeries,
-  QMap<QString, QString> &displayedFieldsForCurrentStudy, QMap<QString, QString> &displayedFieldsForCurrentPatient )
+  QMap<QString, QString> & /* displayedFieldsForCurrentStudy */, QMap<QString, QString> & /*displayedFieldsForCurrentPatient */ )
 {
   QString modality = cachedTagsForInstance[dicomTagToString(DCM_Modality)];
   if (!modality.compare("RTPLAN"))

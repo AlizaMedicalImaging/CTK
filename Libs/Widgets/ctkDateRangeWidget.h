@@ -90,7 +90,7 @@ public Q_SLOTS:
   ///
   /// Utility function that set the start and end values at once
   void setDateTimeRange(QDateTime start, QDateTime end);
-  void setDateRange(QDate start, QDate end);
+  void setDateRange(QDateTime start, QDateTime end);
 
   ///
   /// handle clicks on radio buttons

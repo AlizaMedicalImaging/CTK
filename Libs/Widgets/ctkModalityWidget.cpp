@@ -58,7 +58,7 @@ ctkModalityWidgetPrivate::ctkModalityWidgetPrivate(ctkModalityWidget& object)
 {
   if (sDefaultVisibleModalities.isEmpty())
     {
-    sDefaultVisibleModalities << "CT" << "MR" << "US" << "CR" << "XA" << "NM" << "PT";
+    sDefaultVisibleModalities << "CT" << "MR" << "US" << "NM" << "US"<< "CR" << "XA" << "PT" << "RF" << "DX" << "RTSTRUCT" << "OT";
     }
 }
 

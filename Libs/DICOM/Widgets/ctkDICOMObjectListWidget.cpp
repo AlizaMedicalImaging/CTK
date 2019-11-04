@@ -151,7 +151,7 @@ void ctkDICOMObjectListWidgetPrivate::populateDICOMObjectTreeView(const QString&
 // --------------------------------------------------------------------------
 void ctkDICOMObjectListWidgetPrivate::setPathLabel(const QString& currentFile)
 {
-  currentPathLabel->setText(currentFile);
+  currentPathLineEdit->setText(currentFile);
 }
 
 // --------------------------------------------------------------------------
@@ -212,7 +212,6 @@ ctkDICOMObjectListWidget::ctkDICOMObjectListWidget(QWidget* _parent):Superclass(
   d->fileSliderWidget->setMinimum(1);
   d->fileSliderWidget->setPageStep(1);
 
-  d->currentPathLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
   connect(d->fileSliderWidget, SIGNAL(valueChanged(double)), this, SLOT(updateWidget()));
   connect(d->dcmObjectTreeView, SIGNAL(doubleClicked(const QModelIndex&)),
     this, SLOT(itemDoubleClicked(const QModelIndex&)));
@@ -385,13 +384,13 @@ void ctkDICOMObjectListWidget::onFilterChanged()
     d->dicomObjectModel->rowCount() != 0);
   QPalette palette;
   if (showWarning)
-    {
-    palette.setColor(QPalette::Base, Qt::yellow);
-    }
+  {
+    palette.setColor(QPalette::Base, QColor(115,115,70,255));
+  }
   else
-    {
-    palette.setColor(QPalette::Base, Qt::white);
-    }
+  {
+    palette.setColor(QPalette::Base, QApplication::palette().color(QPalette::Base));
+  }
   d->metadataSearchBox->setPalette(palette);
 }
 

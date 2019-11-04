@@ -20,6 +20,7 @@
 =============================================================================*/
 
 #include "ctkDICOMItem.h"
+#include "ctkDICOMCodecUtils.h"
 
 #include <dcmtk/dcmdata/dcuid.h>
 #include <dcmtk/dcmdata/dctk.h>
@@ -85,26 +86,26 @@ void ctkDICOMItem::InitializeFromItem(DcmItem *dataset, bool takeOwnership)
     if (!d->m_DICOMDataSetInitialized)
     {
       d->m_DICOMDataSetInitialized = true;
-      OFString encoding;
-      if ( CheckCondition( dataset->findAndGetOFString(DCM_SpecificCharacterSet, encoding) ) )
+      const char * encoding;
+      if (CheckCondition(dataset->findAndGetString(DCM_SpecificCharacterSet, encoding)))
       {
-        d->m_SpecificCharacterSet = encoding.c_str();
-      }
-      }
-      if (d->m_SpecificCharacterSet.isEmpty())
-      {
-        ///
-        /// see Bug # 6458:
-        /// There are cases, where different studies of the same person get encoded both with and without the SpecificCharacterSet attribute set.
-        /// DICOM says: default is ASCII / ISO_IR 6 / ISO 646
-        /// Since we experienced such mixed data, we supplement missing characterset information with the ISO_IR 100 / Latin1 character set.
-        /// Since Latin1 is a superset of ASCII, this will not cause problems. PLUS in most cases (Europe) we will guess right and suppress
-        /// "double patients" in applications.
-        ///
-        SetElementAsString( DCM_SpecificCharacterSet, "ISO_IR 100" );
+        d->m_SpecificCharacterSet = encoding;
       }
     }
+    if (d->m_SpecificCharacterSet.isEmpty())
+    {
+      ///
+      /// see Bug # 6458:
+      /// There are cases, where different studies of the same person get encoded both with and without the SpecificCharacterSet attribute set.
+      /// DICOM says: default is ASCII / ISO_IR 6 / ISO 646
+      /// Since we experienced such mixed data, we supplement missing characterset information with the ISO_IR 100 / Latin1 character set.
+      /// Since Latin1 is a superset of ASCII, this will not cause problems. PLUS in most cases (Europe) we will guess right and suppress
+      /// "double patients" in applications.
+      ///
+      SetElementAsString( DCM_SpecificCharacterSet, "ISO_IR 100" );
+    }
   }
+}
 
 
 void ctkDICOMItem::InitializeFromFile(const QString& filename,
@@ -116,7 +117,7 @@ void ctkDICOMItem::InitializeFromFile(const QString& filename,
   DcmDataset *dataset;
 
   DcmFileFormat fileformat;
-  OFCondition status = fileformat.loadFile(filename.toLatin1().data(), readXfer, groupLength, maxReadLength, readMode);
+  OFCondition status = fileformat.loadFile(filename.toLocal8Bit().constData(), readXfer, groupLength, maxReadLength, readMode);
   dataset = fileformat.getAndRemoveDataset();
 
   if (!status.good())
@@ -341,105 +342,38 @@ bool ctkDICOMItem::CopyElement( DcmDataset* dataset, const DcmTagKey& tag, int t
   return !missing && copied;
 }
 
-QString ctkDICOMItem::Decode( const DcmTag& tag, const OFString& raw ) const
+QString ctkDICOMItem::Decode(const DcmTag& tag, const OFString& raw) const
 {
   Q_D(const ctkDICOMItem);
-  // decode for types LO, LT, PN, SH, ST, UT
-  QString vr = TagVR(tag);
-  if ( !d->m_SpecificCharacterSet.isEmpty()
-    && (vr == "LO" ||
-        vr == "LT" ||
-        vr == "PN" ||
-        vr == "SH" ||
-        vr == "ST" ||
-        vr == "UT" ) )
+  DcmTag t(tag);
+  t.lookupVRinDictionary();
+  DcmEVR evr = t.getEVR();
+  if(!d->m_SpecificCharacterSet.isEmpty() &&
+     (evr == EVR_LO ||
+      evr == EVR_LT ||
+      evr == EVR_PN ||
+      evr == EVR_SH ||
+      evr == EVR_ST ||
+      evr == EVR_UC ||
+      evr == EVR_UT))
   {
-    //std::cout << "Decode from encoding " << d->m_SpecificCharacterSet.toStdString() << std::endl;
-    static QMap<QString, QTextDecoder*> decoders;
-    static QMap<QString, QString> qtEncodingNamesForDICOMEncodingNames;
-
-    if (qtEncodingNamesForDICOMEncodingNames.isEmpty())
-    {
-      // runs only once and fills up a map of encoding names that might be named in DICOM files.
-      // for each encoding we store the name that Qt uses for the same encoding.
-      // This is because there is not yet a standard naming scheme but lots of aliases
-      // out in the real world: e.g. http://www.openi18n.org/subgroups/sa/locnameguide/final/CodesetAliasTable.html
-
-                                              //    DICOM        Qt
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 6", "UTF-8"); // actually ASCII, but ok
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 100", "ISO-8859-1");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 101", "ISO-8859-2");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 109", "ISO-8859-3");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 110", "ISO-8859-4");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 144", "ISO-8859-5");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 127", "ISO-8859-6");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 126", "ISO-8859-7");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 138", "ISO-8859-8");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 148", "ISO-8859-9");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 179", "ISO-8859-13");
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO_IR 192", "UTF-8");
-      // japanese
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO 2022 IR 13", "ISO 2022-JP"); // Single byte charset, JIS X 0201: Katakana, Romaji
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO 2022 IR 87", "ISO 2022-JP"); // Multi byte charset, JIS X 0208: Kanji, Kanji set
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO 2022 IR 159", "ISO 2022-JP");
-      // korean
-      qtEncodingNamesForDICOMEncodingNames.insert("ISO 2022 IR 149", "EUC-KR"); // Multi byte charset, KS X 1001: Hangul, Hanja
-
-      // use all names that Qt knows by itself
-      foreach( QByteArray c, QTextCodec::availableCodecs() )
-      {
-        qtEncodingNamesForDICOMEncodingNames.insert( c.constData(), c.constData() );
-      }
-
-    }
-
-    if ( qtEncodingNamesForDICOMEncodingNames.contains(d->m_SpecificCharacterSet) )
-    {
-      QString encodingName( qtEncodingNamesForDICOMEncodingNames[d->m_SpecificCharacterSet] );
-      if ( !decoders.contains( encodingName ) )
-      {
-        QTextCodec* codec = QTextCodec::codecForName( encodingName.toLatin1() );
-        if (!codec)
-        {
-          std::cerr << "Could not create QTextCodec object for '" << encodingName.toStdString() << "'. Using default encoding instead." << std::endl;
-          decoders.insert( encodingName, QTextCodec::codecForName("UTF-8")->makeDecoder() ); // uses Latin1
-        }
-        else
-        {
-          // initialize a QTextDecoder for given encoding
-          decoders.insert( encodingName, codec->makeDecoder() );
-          // We are responsible for deleting the QTextDecoder objects
-          // created by makeDecoder(). BUT as these objects are stored
-          // in a static map that lives until application end AND
-          // nothing application relevant happens during their
-          // destruction, we just let them be destructed by C++ on
-          // application exit.
-          // Any potential leaks that are found by this behavior can
-          // be suppressed.
-        }
-      }
-
-      //std::cout << "Decode '" <<  raw.c_str() << "' to '" << decoders[encodingName]->toUnicode( raw.c_str() ).toLocal8Bit().constData() << "'" << std::endl;
-      return decoders[encodingName]->toUnicode( raw.c_str() );
-    }
-    else
-    {
-      std::cerr << "DICOM dataset contains some encoding that we never thought we would see(" << d->m_SpecificCharacterSet.toStdString() << "). Using default encoding." << std::endl;
-    }
+	const QByteArray ba = QByteArray(raw.c_str());
+	const QString s = ctkDICOMCodecUtils::toUTF8(&ba, d->m_SpecificCharacterSet.toLatin1().constData());
+	return s;
   }
-
-  return QString::fromLatin1(raw.c_str()); // Latin1 is ISO 8859, which is the default character set of DICOM (PS 3.5-2008, Page 18)
-
+  return QString::fromLatin1(raw.c_str());
 }
 
-OFString ctkDICOMItem::Encode( const DcmTag& tag, const QString& qstring ) const
+OFString ctkDICOMItem::Encode(const DcmTag& tag, const QString& qstring) const
 {
-  // TODO: respect given character-set when encoding; see Decode()
+#ifndef _MSC_VER
+#warning "TODO ctkDICOMItem::Encode()"
+#endif
   Q_UNUSED(tag);
-  return OFString( qstring.toLatin1().data() ); // Latin1 is ISO 8859, which is the default character set of DICOM (PS 3.5-2008, Page 18)
+  return OFString(qstring.toLatin1().data());
 }
 
-QString ctkDICOMItem::GetAllElementValuesAsString( const DcmTag& tag ) const
+QString ctkDICOMItem::GetAllElementValuesAsString(const DcmTag& tag) const
 {
   this->EnsureDcmDataSetIsInitialized();
 
@@ -449,11 +383,11 @@ QString ctkDICOMItem::GetAllElementValuesAsString( const DcmTag& tag ) const
   findAndGetElement(tag, element);
   if (!element) return QString::null;
 
-  const unsigned long count = element->getVM(); // value multiplicity
+  const unsigned long count = element->getVM();
   for (unsigned long i = 0; i < count; ++i)
   {
     OFString s;
-    if ( CheckCondition( const_cast<ctkDICOMItem*>(this)->findAndGetOFString(tag, s, i) ) )
+    if (CheckCondition(const_cast<ctkDICOMItem*>(this)->findAndGetOFString(tag, s, i)))
     {
       qsl << Decode( tag, s );
     }

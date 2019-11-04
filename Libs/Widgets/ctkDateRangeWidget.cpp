@@ -20,7 +20,6 @@
 
 // Qt includes
 #include <QDebug>
-#include <QDate>
 #include <QDateTime>
 #include <QDateTimeEdit>
 
@@ -39,16 +38,9 @@ protected:
   ctkDateRangeWidget* const q_ptr;
 public:
   ctkDateRangeWidgetPrivate(ctkDateRangeWidget& object);
-  /// Automatically select the right radio button based on the date range
-  void autoselectRadioButton();
 
-  /// ForceSelectRange is set to true when the user expressively requested
-  /// to have "Select Range" option active. This property is set only if
-  /// the user clicks on the option or if setSelectRange() is programatically
-  /// called
-  bool          ForceSelectRange;
   /// DisplayTime is true if the time is displayed in the range widget
-  bool          DisplayTime;
+  bool DisplayTime;
 };
 
 
@@ -56,52 +48,7 @@ public:
 ctkDateRangeWidgetPrivate::ctkDateRangeWidgetPrivate(ctkDateRangeWidget& object)
   :q_ptr(&object)
 {
-  this->ForceSelectRange = false;
   this->DisplayTime = true;
-}
-// -------------------------------------------------------------------------
-void ctkDateRangeWidgetPrivate::autoselectRadioButton()
-{
-  Q_Q(ctkDateRangeWidget);
-  QDate startDate = q->startDateTime().date();
-  QDate endDate = q->endDateTime().date();
-  if (this->ForceSelectRange)
-    {
-    this->SelectRangeRadioButton->setChecked(true);
-    }
-  else if (q->isAnyDate())
-    {
-    this->AnyDateRadioButton->setChecked(true);
-    }
-  else if (q->startDateTime() != QDateTime(q->startDateTime().date()) ||
-           q->endDateTime() != QDateTime(q->endDateTime().date()))
-    {
-    this->SelectRangeRadioButton->setChecked(true);
-    }
-  else if (startDate.addDays(1) == endDate &&
-           startDate == QDate::currentDate())
-    {
-    this->TodayRadioButton->setChecked(true);
-    }
-  else if (startDate.addDays(1) == endDate &&
-           endDate == QDate::currentDate())
-    {
-    this->YesterdayRadioButton->setChecked(true);
-    }
-  else if (startDate.addDays(7) == endDate &&
-           endDate == QDate::currentDate())
-    {
-    this->LastWeekRadioButton->setChecked(true);
-    }
-  else if (startDate.addDays(31) == endDate &&
-           endDate == QDate::currentDate())
-    {
-    this->LastMonthRadioButton->setChecked(true);
-    }
-  else
-    {
-    this->SelectRangeRadioButton->setChecked(true);
-    }
 }
 
 // --------------------------------------------------------------------------
@@ -112,10 +59,11 @@ ctkDateRangeWidget::ctkDateRangeWidget(QWidget* _parent) : Superclass(_parent)
   
   d->setupUi(this);
 
-  d->DateRangeWidget->setVisible(d->SelectRangeRadioButton->isChecked());
+  d->DateRangeWidget->setEnabled(false);
 
+  const QDateTime dt = QDateTime::currentDateTime();
   this->setDisplayTime(false);
-  this->setDateTimeRange(QDateTime(), QDateTime());
+  this->setDateTimeRange(dt.addDays(-31), dt);
   
   // Note that we connect on the clicked() signal and not the toggled.
   // The clicked() signal is fired only when the USER clicks the radio button
@@ -132,7 +80,6 @@ ctkDateRangeWidget::ctkDateRangeWidget(QWidget* _parent) : Superclass(_parent)
                    this, SLOT(setLastMonth()));
   QObject::connect(d->SelectRangeRadioButton, SIGNAL(clicked()),
                    this, SLOT(setSelectRange()));
-
   QObject::connect(d->StartDate, SIGNAL(dateTimeChanged(QDateTime)),
                    this, SIGNAL(startDateTimeChanged(QDateTime)));
   QObject::connect(d->EndDate, SIGNAL(dateTimeChanged(QDateTime)),
@@ -167,7 +114,6 @@ void ctkDateRangeWidget::setStartDateTime(QDateTime dateTime)
 {
   Q_D(ctkDateRangeWidget);
   d->StartDate->setDateTime(dateTime);
-  d->autoselectRadioButton();
 }
 
 // --------------------------------------------------------------------------
@@ -175,22 +121,18 @@ void ctkDateRangeWidget::setEndDateTime(QDateTime dateTime)
 {
   Q_D(ctkDateRangeWidget);
   d->EndDate->setDateTime(dateTime);
-  d->autoselectRadioButton();
 }
 
 // --------------------------------------------------------------------------
-void ctkDateRangeWidget::setDateTimeRange(QDateTime startDateTime, QDateTime endDateTime)
+void ctkDateRangeWidget::setDateTimeRange(QDateTime from, QDateTime to)
 {
   Q_D(ctkDateRangeWidget);
-  d->StartDate->setDateTime(startDateTime.isValid() ?
-    startDateTime : d->StartDate->minimumDateTime());
-  d->EndDate->setDateTime(endDateTime.isValid() ?
-    endDateTime : d->EndDate->maximumDateTime());
-  d->autoselectRadioButton();
+  d->StartDate->setDateTime(from.isValid() ? from : d->StartDate->minimumDateTime());
+  d->EndDate->setDateTime  (to.isValid()   ? to   : d->EndDate->maximumDateTime());
 }
 
 // --------------------------------------------------------------------------
-void ctkDateRangeWidget::setDateRange(QDate startDate, QDate endDate)
+void ctkDateRangeWidget::setDateRange(QDateTime startDate, QDateTime endDate)
 {
   this->setDateTimeRange(QDateTime(startDate), QDateTime(endDate));
 }
@@ -199,16 +141,14 @@ void ctkDateRangeWidget::setDateRange(QDate startDate, QDate endDate)
 void ctkDateRangeWidget::setAnyDate()
 {
   Q_D(ctkDateRangeWidget);
-  d->ForceSelectRange = false;
-  this->setDateTimeRange(QDateTime(), QDateTime());
+  this->setDateRange(d->StartDate->minimumDateTime(), d->EndDate->maximumDateTime());
 }
 
 // --------------------------------------------------------------------------
 void ctkDateRangeWidget::setToday()
 {
   Q_D(ctkDateRangeWidget);
-  d->ForceSelectRange = false;
-  QDate today = QDate::currentDate();
+  QDateTime today = QDateTime::currentDateTime();
   this->setDateRange(today, today.addDays(1));
 }
 
@@ -216,8 +156,7 @@ void ctkDateRangeWidget::setToday()
 void ctkDateRangeWidget::setYesterday()
 {
   Q_D(ctkDateRangeWidget);
-  d->ForceSelectRange = false;
-  QDate today = QDate::currentDate();
+  QDateTime today = QDateTime::currentDateTime();
   this->setDateRange(today.addDays(-1), today);
 }
 
@@ -225,8 +164,7 @@ void ctkDateRangeWidget::setYesterday()
 void ctkDateRangeWidget::setLastWeek()
 {
   Q_D(ctkDateRangeWidget);
-  d->ForceSelectRange = false;
-  QDate today = QDate::currentDate();
+  QDateTime today = QDateTime::currentDateTime();
   this->setDateRange(today.addDays(-7), today);
 }
 
@@ -234,8 +172,7 @@ void ctkDateRangeWidget::setLastWeek()
 void ctkDateRangeWidget::setLastMonth()
 {
   Q_D(ctkDateRangeWidget);
-  d->ForceSelectRange = false;
-  QDate today = QDate::currentDate();
+  QDateTime today = QDateTime::currentDateTime();
   this->setDateRange(today.addMonths(-1), today);
 }
 
@@ -244,7 +181,6 @@ void ctkDateRangeWidget::setSelectRange()
 {
   Q_D(ctkDateRangeWidget);
   d->SelectRangeRadioButton->setChecked(true);
-  d->ForceSelectRange = true;
 }
 
 // -------------------------------------------------------------------------
@@ -284,5 +220,4 @@ bool ctkDateRangeWidget::displayTime()const
 void ctkDateRangeWidget::onDateTimeChanged()
 {
   Q_D(ctkDateRangeWidget);
-  d->autoselectRadioButton();
 }

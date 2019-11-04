@@ -131,7 +131,7 @@ public:
   /// \return true if schema was updated
   Q_INVOKABLE bool updateSchema(
     const char* schemaFile = ctkDICOMDatabase::defaultSchemaFile(),
-    const char* newDatabaseDir = nullptr);
+    const char* newDatabaseDir = NULL);
 
   /// Update the database schema only if the versions don't match
   /// \param schemaFile SQL file containing schema definition
@@ -142,7 +142,7 @@ public:
   /// \return true if schema was updated
   Q_INVOKABLE bool updateSchemaIfNeeded(
     const char* schemaFile = ctkDICOMDatabase::defaultSchemaFile(),
-    const char* newDatabaseDir = nullptr);
+    const char* newDatabaseDir = NULL);
 
   /// Return the schema version needed by the current version of this code
   Q_INVOKABLE QString schemaVersion();

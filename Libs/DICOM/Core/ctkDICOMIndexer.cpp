@@ -87,15 +87,14 @@ void ctkDICOMIndexerPrivateWorker::start()
   database.openDatabase(this->RequestQueue->databaseFilename());
   database.setTagsToPrecache(this->RequestQueue->tagsToPrecache());
   database.setTagsToExcludeFromStorage(this->RequestQueue->tagsToExcludeFromStorage());
-
   int patientsCountBefore = database.patientsCount();
-  int studiesCountBefore = database.studiesCount();
-  int seriesCountBefore = database.seriesCount();
-  int imagesCountBefore = database.imagesCount();
-  int patientsCountAfter = patientsCountBefore;
-  int studiesCountAfter = studiesCountBefore;
-  int seriesCountAfter = seriesCountBefore;
-  int imagesCountAfter = imagesCountBefore;
+  int studiesCountBefore  = database.studiesCount();
+  int seriesCountBefore   = database.seriesCount();
+  int imagesCountBefore   = database.imagesCount();
+  int patientsCountAfter  = patientsCountBefore;
+  int studiesCountAfter   = studiesCountBefore;
+  int seriesCountAfter    = seriesCountBefore;
+  int imagesCountAfter    = imagesCountBefore;
 
   do
   {
@@ -117,6 +116,11 @@ void ctkDICOMIndexerPrivateWorker::start()
       this->CompletedRequestCount++;
     } while (!this->RequestQueue->isEmpty());
 
+    patientsCountAfter = database.patientsCount();
+    studiesCountAfter  = database.studiesCount();
+    seriesCountAfter   = database.seriesCount();
+    imagesCountAfter   = database.imagesCount();
+
     QTime timeProbe;
     timeProbe.start();
 
@@ -125,11 +129,6 @@ void ctkDICOMIndexerPrivateWorker::start()
     emit progress(this->TimePercentageIndexing);
 
     database.updateDisplayedFields();
-    patientsCountAfter = database.patientsCount();
-    studiesCountAfter = database.studiesCount();
-    seriesCountAfter = database.seriesCount();
-    imagesCountAfter = database.imagesCount();
-
     double elapsedTimeInSeconds = timeProbe.elapsed() / 1000.0;
     qDebug() << QString("DICOM indexer has updated display fields for %1 files [%2s]")
       .arg(imagesCountAfter-imagesCountBefore).arg(QString::number(elapsedTimeInSeconds, 'f', 2));
@@ -168,7 +167,7 @@ void ctkDICOMIndexerPrivateWorker::processIndexingRequest(DICOMIndexingQueue::In
   timeProbe.start();
 
   int currentFileIndex = 0;
-  int lastReportedPercent = 0;
+  //int lastReportedPercent = 0;
   int alreadyAddedFileCount = 0;
   QStringList alreadyAddedFiles;
   foreach(const QString& filePath, indexingRequest.inputFilesPath)
@@ -268,22 +267,28 @@ void ctkDICOMIndexerPrivateWorker::writeIndexingResultsToDatabase(ctkDICOMDataba
 //------------------------------------------------------------------------------
 ctkDICOMIndexerPrivate::ctkDICOMIndexerPrivate(ctkDICOMIndexer& o)
   : q_ptr(&o)
-  , Database(nullptr)
+  , Database(NULL)
   , BackgroundImportEnabled(false)
 {
   ctkDICOMIndexerPrivateWorker* worker = new ctkDICOMIndexerPrivateWorker(&this->RequestQueue);
   worker->moveToThread(&this->WorkerThread);
-  
+#if QT_VERSION >= 0x050000
   connect(&this->WorkerThread, &QThread::finished, worker, &QObject::deleteLater);
   connect(this, &ctkDICOMIndexerPrivate::startWorker, worker, &ctkDICOMIndexerPrivateWorker::start);
-
-  // Progress report
-  connect(worker, &ctkDICOMIndexerPrivateWorker::progress, q_ptr, &ctkDICOMIndexer::progress);
-  connect(worker, &ctkDICOMIndexerPrivateWorker::progressDetail, q_ptr, &ctkDICOMIndexer::progressDetail);
-  connect(worker, &ctkDICOMIndexerPrivateWorker::progressStep, q_ptr, &ctkDICOMIndexer::progressStep);
+  connect(worker, &ctkDICOMIndexerPrivateWorker::progress,         q_ptr, &ctkDICOMIndexer::progress);
+  connect(worker, &ctkDICOMIndexerPrivateWorker::progressDetail,   q_ptr, &ctkDICOMIndexer::progressDetail);
+  connect(worker, &ctkDICOMIndexerPrivateWorker::progressStep,     q_ptr, &ctkDICOMIndexer::progressStep);
   connect(worker, &ctkDICOMIndexerPrivateWorker::updatingDatabase, q_ptr, &ctkDICOMIndexer::updatingDatabase);
   connect(worker, &ctkDICOMIndexerPrivateWorker::indexingComplete, q_ptr, &ctkDICOMIndexer::indexingComplete);
-
+#else
+  connect(&this->WorkerThread, SIGNAL(finished()), worker, SLOT(deleteLater()));
+  connect(this, SIGNAL(startWorker()), worker, SLOT(start()));
+  connect(worker, SIGNAL(progress(int)),                     q_ptr, SIGNAL(progress(int)));
+  connect(worker, SIGNAL(progressDetail(QString)),           q_ptr, SIGNAL(progressDetail(QString)));
+  connect(worker, SIGNAL(progressStep(QString)),             q_ptr, SIGNAL(progressStep(QString)));
+  connect(worker, SIGNAL(updatingDatabase(bool)),            q_ptr, SIGNAL(updatingDatabase(bool)));
+  connect(worker, SIGNAL(indexingComplete(int,int,int,int)), q_ptr, SIGNAL(indexingComplete(int,int,int,int)));
+#endif
   this->WorkerThread.start();
 }
 
@@ -294,7 +299,7 @@ ctkDICOMIndexerPrivate::~ctkDICOMIndexerPrivate()
   this->RequestQueue.setStopRequested(true);
   this->WorkerThread.quit();
   this->WorkerThread.wait();
-  q->setDatabase(nullptr);
+  q->setDatabase(NULL);
 }
 
 //------------------------------------------------------------------------------
@@ -600,10 +605,18 @@ void ctkDICOMIndexer::waitForImportFinished(int msecTimeout /*=-1*/)
   QTimer timer;
   timer.setSingleShot(true);
   QEventLoop loop;
+#if QT_VERSION >= 0x050000
   connect(this, &ctkDICOMIndexer::indexingComplete, &loop, &QEventLoop::quit);
+#else
+  connect(this, SIGNAL(indexingComplete()), &loop, SLOT(quit()));
+#endif
   if (msecTimeout >= 0)
   {
+#if QT_VERSION >= 0x050000
     connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+#else
+    connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+#endif
     timer.start(msecTimeout);
   }
   if (!this->isImporting())

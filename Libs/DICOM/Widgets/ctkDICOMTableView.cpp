@@ -23,10 +23,13 @@
 #include "ui_ctkDICOMTableView.h"
 
 // Qt includes
+#if QT_VERSION >= 0x050000
 #include <QJsonObject>
+#endif
 #include <QMouseEvent>
 #include <QSortFilterProxyModel>
 #include <QSqlQueryModel>
+#include <QtGlobal>
 
 //------------------------------------------------------------------------------
 class ctkDICOMTableViewPrivate : public Ui_ctkDICOMTableView
@@ -107,7 +110,7 @@ void ctkDICOMTableViewPrivate::init()
   this->dicomSQLFilterModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
   this->tblDicomDatabaseView->setModel(this->dicomSQLFilterModel);
   this->tblDicomDatabaseView->setSortingEnabled(true);
-#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
+#if QT_VERSION < 0x050000
   this->tblDicomDatabaseView->horizontalHeader()->setResizeMode(QHeaderView::Interactive);
   this->tblDicomDatabaseView->verticalHeader()->setResizeMode(QHeaderView::ResizeToContents);
 #else
@@ -203,6 +206,57 @@ void ctkDICOMTableViewPrivate::applyColumnProperties()
 
     QString fieldFormat = this->dicomDatabase->formatForField(this->queryTableName(), columnName);
     QHeaderView::ResizeMode columnResizeMode = QHeaderView::Interactive;
+
+#if QT_VERSION < 0x050000
+    if (!fieldFormat.isEmpty())
+    {
+      const bool b1 = fieldFormat.contains(QString("\"resizeMode\""));
+      const bool b2 = fieldFormat.contains(QString("\"sort\""));
+      if (b2||b1)
+      {
+        if (b1)
+        {
+          if (fieldFormat.contains(QString("interactive")))
+          {
+            columnResizeMode = QHeaderView::Interactive;
+          }
+          else if (fieldFormat.contains(QString("stretch")))
+          {
+            columnResizeMode = QHeaderView::Stretch;
+          }
+          else if (fieldFormat.contains(QString("resizeToContents")))
+          {
+             columnResizeMode = QHeaderView::ResizeToContents;
+          }
+          else
+          {
+            qWarning() << "Invalid ColumnDisplayProperties Format string for column " << columnName << ": resizeMode must be interactive, stretch, or resizeToContents";
+          }
+        }
+        if (b2)
+        {
+          defaultSortByColumn = col;
+          if (fieldFormat.contains(QString("ascending")))
+          {
+            defaultSortOrder = Qt::AscendingOrder;
+          }
+          else if (fieldFormat.contains(QString("descending")))
+          {
+            defaultSortOrder = Qt::DescendingOrder;
+          }
+          else
+          {
+            qWarning() << "Invalid ColumnDisplayProperties Format string for column " << columnName << ": sort must be ascending or descending";
+          }
+        }
+      }
+    }
+    this->tblDicomDatabaseView->horizontalHeader()->setResizeMode(col, columnResizeMode);
+    if (columnResizeMode == QHeaderView::Stretch && visibility)
+    {
+      stretchedColumnFound = true;
+    }
+#else
     if (!fieldFormat.isEmpty())
     {
       QJsonDocument fieldFormatDoc = QJsonDocument::fromJson(fieldFormat.toUtf8());
@@ -217,7 +271,6 @@ void ctkDICOMTableViewPrivate::applyColumnProperties()
       if (!fieldFormatObj.isEmpty())
       {
         // format string successfully decoded from json
-
         // resize mode
         QString resizeModeStr = fieldFormatObj.value(QString("resizeMode")).toString("interactive");
         if (resizeModeStr == "interactive")
@@ -236,7 +289,6 @@ void ctkDICOMTableViewPrivate::applyColumnProperties()
         {
           qWarning() << "Invalid ColumnDisplayProperties Format string for column " << columnName << ": resizeMode must be interactive, stretch, or resizeToContents";
         }
-
         // default sort order
         QString sortStr = fieldFormatObj.value(QString("sort")).toString();
         if (!sortStr.isEmpty())
@@ -255,7 +307,6 @@ void ctkDICOMTableViewPrivate::applyColumnProperties()
             qWarning() << "Invalid ColumnDisplayProperties Format string for column " << columnName << ": sort must be ascending or descending";
           }
         }
-
       }
       else
       {
@@ -268,7 +319,7 @@ void ctkDICOMTableViewPrivate::applyColumnProperties()
     {
       stretchedColumnFound = true;
     }
-
+#endif
   }
 
   // If no stretched column is shown then stretch the last column to make the table look nicely aligned

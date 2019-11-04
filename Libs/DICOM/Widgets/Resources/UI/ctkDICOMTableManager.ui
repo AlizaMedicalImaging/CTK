@@ -48,16 +48,16 @@
        <number>6</number>
       </property>
       <property name="leftMargin">
-       <number>6</number>
+       <number>0</number>
       </property>
       <property name="topMargin">
        <number>0</number>
       </property>
       <property name="rightMargin">
-       <number>6</number>
+       <number>0</number>
       </property>
       <property name="bottomMargin">
-       <number>3</number>
+       <number>0</number>
       </property>
       <item>
        <widget class="QLabel" name="lblPatients">
@@ -79,6 +79,9 @@
         </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="frame">
+         <bool>false</bool>
         </property>
         <property name="placeholderText">
          <string/>
@@ -106,6 +109,9 @@
         <property name="text">
          <string/>
         </property>
+        <property name="frame">
+         <bool>false</bool>
+        </property>
         <property name="placeholderText">
          <string/>
         </property>
@@ -131,6 +137,9 @@
         </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="frame">
+         <bool>false</bool>
         </property>
         <property name="placeholderText">
          <string/>
@@ -171,14 +180,14 @@ QSplitter::handle:vertical {height: 2px;}</string>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ctkDICOMTableView</class>
-   <extends>QWidget</extends>
-   <header>ctkDICOMTableView.h</header>
-  </customwidget>
-  <customwidget>
    <class>ctkSearchBox</class>
    <extends>QLineEdit</extends>
    <header>ctkSearchBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ctkDICOMTableView</class>
+   <extends>QWidget</extends>
+   <header>ctkDICOMTableView.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

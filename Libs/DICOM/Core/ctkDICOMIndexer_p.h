@@ -193,10 +193,10 @@ protected:
   QStringList TagsToPrecache;
   QStringList TagsToExcludeFromStorage;
 
+  mutable QMutex Mutex;
+
   bool IsIndexing;
   bool StopRequested;
-
-  mutable QMutex Mutex;
 };
 
 
@@ -219,18 +219,18 @@ Q_SIGNALS:
   void indexingComplete(int, int, int, int);
 
 private:
-
   void processIndexingRequest(DICOMIndexingQueue::IndexingRequest& request, ctkDICOMDatabase& database);
   void writeIndexingResultsToDatabase(ctkDICOMDatabase& database);
 
   DICOMIndexingQueue* RequestQueue;
+
+  int RemainingRequestCount; // the current request in progress is not included
+  int CompletedRequestCount; // the current request in progress is not included
+
   int NumberOfInstancesToInsert;
   int NumberOfInstancesInserted;
 
   double TimePercentageIndexing;
-
-  int RemainingRequestCount; // the current request in progress is not included
-  int CompletedRequestCount; // the current request in progress is not included
 
   // List of already indexed file paths and oldest file modified time in the database.
   // Cached here to avoid locking/unlocking a mutex each time a file is looked up.

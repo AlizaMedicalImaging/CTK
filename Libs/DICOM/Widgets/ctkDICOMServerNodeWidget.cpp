@@ -25,6 +25,7 @@
 #include <QSettings>
 #include <QTableWidgetItem>
 #include <QVariant>
+#include <QApplication>
 
 /// CTK includes
 #include <ctkCheckableHeaderView.h>
@@ -167,7 +168,7 @@ void ctkDICOMServerNodeWidget::saveSettings()
 {
   Q_D(ctkDICOMServerNodeWidget);
 
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, QApplication::organizationName(), QApplication::applicationName());
   const int rowCount = d->NodeTable->rowCount();
   
   settings.setValue("ServerNodeCount", rowCount);
@@ -189,7 +190,7 @@ void ctkDICOMServerNodeWidget::readSettings()
 
   d->NodeTable->setRowCount(0);
 
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat, QSettings::UserScope, QApplication::organizationName(), QApplication::applicationName());
 
   QMap<QString, QVariant> node;
   if (settings.status() == QSettings::AccessError ||

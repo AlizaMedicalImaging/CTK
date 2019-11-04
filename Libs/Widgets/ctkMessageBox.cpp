@@ -25,6 +25,7 @@
 #include <QPushButton>
 #include <QSettings>
 #include <QTimer>
+#include <QApplication>
 
 // CTK includes
 #include "ctkMessageBox.h"
@@ -131,7 +132,10 @@ QAbstractButton* ctkMessageBoxPrivate::button(int buttonOrRole)
 //-----------------------------------------------------------------------------
 int ctkMessageBoxPrivate::buttonFromSettings()
 {
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat,
+                     QSettings::UserScope,
+                     QApplication::organizationName(),
+                     QApplication::applicationName());
   int button = settings.value(this->DontShowAgainSettingsKey,
                               static_cast<int>(QMessageBox::InvalidRole)).toInt();
   return button;
@@ -155,7 +159,10 @@ void ctkMessageBoxPrivate::writeSettings(int button)
     {
     return;
     }
-  QSettings settings;
+  QSettings settings(QSettings::IniFormat,
+                     QSettings::UserScope,
+                     QApplication::organizationName(),
+                     QApplication::applicationName());
   settings.setValue(this->DontShowAgainSettingsKey,
                     QVariant(this->DontShowAgainCheckBox->isChecked() ?
                              button : QMessageBox::InvalidRole));

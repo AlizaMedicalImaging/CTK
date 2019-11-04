@@ -87,7 +87,7 @@ void ctkDICOMDisplayedFieldGeneratorDefaultRule::getDisplayedFieldsForInstance(
 {
   displayedFieldsForCurrentPatient["PatientsName"] = cachedTagsForInstance[dicomTagToString(DCM_PatientName)];
   displayedFieldsForCurrentPatient["PatientID"] = cachedTagsForInstance[dicomTagToString(DCM_PatientID)];
-  displayedFieldsForCurrentPatient["DisplayedPatientsName"] = this->humanReadablePatientName(cachedTagsForInstance[dicomTagToString(DCM_PatientName)]);
+  displayedFieldsForCurrentPatient["DisplayedPatientsName"] = humanReadablePatientName(cachedTagsForInstance[dicomTagToString(DCM_PatientName)]);
 
   displayedFieldsForCurrentStudy["StudyInstanceUID"] = cachedTagsForInstance[dicomTagToString(DCM_StudyInstanceUID)];
   displayedFieldsForCurrentStudy["PatientIndex"] = displayedFieldsForCurrentPatient["PatientIndex"];
@@ -141,46 +141,55 @@ void ctkDICOMDisplayedFieldGeneratorDefaultRule::mergeDisplayedFieldsForInstance
 }
 
 //------------------------------------------------------------------------------
-QString ctkDICOMDisplayedFieldGeneratorDefaultRule::humanReadablePatientName(QString dicomPatientName)
+QString ctkDICOMDisplayedFieldGeneratorDefaultRule::humanReadablePatientName(const QString & dicomPatientName)
 {
-  OFString dicomName(dicomPatientName.toLatin1().constData());
-  OFString formattedName;
-  OFString lastName, firstName, middleName, namePrefix, nameSuffix;
-  OFCondition l_error = DcmPersonName::getNameComponentsFromString(
-    dicomName, lastName, firstName, middleName, namePrefix, nameSuffix);
-  if (l_error.good())
+  QString formattedName("");
+  const QStringList d = dicomPatientName.split(QString("="), QString::SkipEmptyParts);
+  for (int x = 0; x < d.size(); x++)
   {
-    formattedName.clear();
-    // concatenate name components per this convention Last, First Middle, Suffix (Prefix)
-    if (!lastName.empty())
+    if (!formattedName.isEmpty()) formattedName += QString(" = ");
+    // Last, First, Middle, Prefix, Suffix.
+    const QStringList l = d.at(x).split(QString("^"), QString::KeepEmptyParts);
+    const int k = l.size();
+    const QString lastName   = k > 0 ? l.at(0).trimmed().remove(QChar('\0')) : "";
+    const QString firstName  = k > 1 ? l.at(1).trimmed().remove(QChar('\0')) : "";
+    const QString middleName = k > 2 ? l.at(2).trimmed().remove(QChar('\0')) : "";
+    const QString namePrefix = k > 3 ? l.at(3).trimmed().remove(QChar('\0')) : "";
+    const QString nameSuffix = k > 4 ? l.at(4).trimmed().remove(QChar('\0')) : "";
+    // Concatenate name components per this convention: Last, First Middle, Suffix (Prefix).
+    if (!lastName.isEmpty())
     {
       formattedName += lastName;
-      if (!(firstName.empty() && middleName.empty()))
+      if (!(firstName.isEmpty() && middleName.isEmpty()))
       {
         formattedName += ",";
       }
     }
-    if (!firstName.empty())
+    if (!firstName.isEmpty())
     {
       formattedName += " ";
       formattedName += firstName;
     }
-    if (!middleName.empty())
+    if (!middleName.isEmpty())
     {
       formattedName += " ";
       formattedName += middleName;
     }
-    if (!nameSuffix.empty())
+    if (!nameSuffix.isEmpty())
     {
       formattedName += ", ";
       formattedName += nameSuffix;
     }
-    if (!namePrefix.empty())
+    if (!namePrefix.isEmpty())
     {
       formattedName += " (";
       formattedName += namePrefix;
       formattedName += ")";
     }
+#if 0
+    // For backward compatibility, read 1st "=" block only.
+    break;
+#endif
   }
-  return QString(formattedName.c_str());
+  return formattedName;
 }

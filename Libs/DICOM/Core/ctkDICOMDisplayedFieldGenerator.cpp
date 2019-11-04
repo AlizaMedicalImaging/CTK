@@ -98,7 +98,7 @@ QStringList ctkDICOMDisplayedFieldGenerator::getRequiredTags()
 
 //------------------------------------------------------------------------------
 void ctkDICOMDisplayedFieldGenerator::updateDisplayedFieldsForInstance(
-  const QString& sopInstanceUID, const QMap<QString, QString> &cachedTagsForInstance,
+  const QString& /* sopInstanceUID */, const QMap<QString, QString> &cachedTagsForInstance,
   QMap<QString, QString> &displayedFieldsForCurrentSeries,
   QMap<QString, QString> &displayedFieldsForCurrentStudy,
   QMap<QString, QString> &displayedFieldsForCurrentPatient )

@@ -23,7 +23,6 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QProgressDialog>
-#include <QSettings>
 #include <QTreeView>
 #include <QTabBar>
 
@@ -161,7 +160,7 @@ void ctkDICOMQueryRetrieveWidget::query()
     {
       d->QueryResultDatabase.openDatabase(":memory:");
     }
-    catch (std::exception e)
+    catch (std::exception &)
     {
       logger.error("Database error: " + d->QueryResultDatabase.lastError());
       d->QueryResultDatabase.closeDatabase();
@@ -230,7 +229,7 @@ void ctkDICOMQueryRetrieveWidget::query()
                  this, SLOT(onQueryProgressChanged(int)));
       disconnect(&progress, SIGNAL(canceled()), query, SLOT(cancel()));
       }
-    catch (std::exception e)
+    catch (std::exception &)
       {
       logger.error ( "Query error: " + parameters["Name"].toString() );
       progress.setLabelText("Query error: " + parameters["Name"].toString());
@@ -348,7 +347,7 @@ void ctkDICOMQueryRetrieveWidget::retrieve()
         retrieve->moveStudy ( studyUID );
         }
       }
-    catch (std::exception e)
+    catch (std::exception &)
       {
       logger.error ( "Retrieve failed" );
       if(d->UseProgressDialog)

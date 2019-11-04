@@ -10,6 +10,7 @@ set(KIT_export_directive "CTK_DICOM_CORE_EXPORT")
 set(KIT_SRCS
   ctkDICOMAbstractThumbnailGenerator.cpp
   ctkDICOMAbstractThumbnailGenerator.h
+  ctkDICOMCodecUtils.cpp
   ctkDICOMDatabase.cpp
   ctkDICOMDatabase.h
   ctkDICOMItem.h

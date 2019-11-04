@@ -43,8 +43,6 @@ public:
   /// Constructor
   /// If \li parent is null, ctkModalityWidget will be a top-level widget
   /// \note The \li parent can be set later using QWidget::setParent()
-  /// By default, all the modalities are selected and only the following list 
-  /// of modalities is visible: ("CT", "MR", "US", "CR", "XA", "NM", "PT")
   explicit ctkModalityWidget(QWidget* parent = 0);
   
   /// Destructor
