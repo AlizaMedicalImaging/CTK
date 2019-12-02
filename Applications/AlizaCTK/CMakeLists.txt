@@ -6,7 +6,7 @@ project(AlizaCTK)
 
 # Source files
 set(KIT_SRCS
-  AlizaCTKMain.cpp
+  AlizaCTKMain.cpp CTK.rc
   )
 
 # Headers that should run through moc
