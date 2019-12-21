@@ -30,7 +30,7 @@
  * are supported. There is an attempt to guess custom value, e.g.
  * 'WINDOWS 1251'. Use Latin1 if failed.
  */
-QString ctkDICOMCodecUtils::toUTF8(const QByteArray* ba, const char* charset, bool * ok)
+QString ctkDICOMCodecUtils::toUTF8(const QByteArray* ba, const char* charset, bool* ok)
 {
   QString result("");
   if (!ba)
@@ -55,11 +55,11 @@ QString ctkDICOMCodecUtils::toUTF8(const QByteArray* ba, const char* charset, bo
       break;
     }
   }
+  if (ok) *ok = false;
   // ISO 2022
   if (iso2022)
   {
     const QList<QByteArray> iso = ba->split(0x1b); // ESC
-    if (ok) *ok = false;
     for (int z = 0; z < iso.size(); z++)
     {
       QTextCodec * codec = NULL;
@@ -339,13 +339,11 @@ QString ctkDICOMCodecUtils::toUTF8(const QByteArray* ba, const char* charset, bo
     }
     else
     {
-      if (ok) *ok = false;
       result = QString::fromLatin1(ba->constData());
     }
   }
   else
   {
-    if (ok) *ok = false;
     result = QString::fromLatin1(ba->constData()); // error
   }
   return result;
@@ -370,13 +368,13 @@ QString ctkDICOMCodecUtils::toUTF8(const QByteArray* ba, const char* charset, bo
 #include "dcmtk/dcmdata/dcspchrs.h"
 #include "dcmtk/dcmdata/dctypes.h"
 
-QString ctkDICOMCodecUtils::toUTF8dcmtk(const char* ba, const char* charset, bool * ok)
+QString ctkDICOMCodecUtils::toUTF8dcmtk(const char* ba, const char* charset, bool* ok)
 {
   QString res;
   OFString r;
   DcmSpecificCharacterSet converter;
   converter.selectCharacterSet(charset);
-  OFCondition c = converter.convertString(ba, r); // to UTF-8
+  OFCondition c = converter.convertString(ba, r); // default UTF-8
   if (c.good())
   {
     if (ok) *ok = true;
