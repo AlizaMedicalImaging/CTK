@@ -356,7 +356,7 @@ void ctkDICOMBrowserPrivate::init()
 
   this->MetadataDialog = new ctkDICOMMetadataDialog();
   this->MetadataDialog->setObjectName("DICOMMetadata");
-  this->MetadataDialog->setWindowTitle(QObject::tr("DICOM File Metadata"));
+  this->MetadataDialog->setWindowTitle(QObject::tr("DICOM Metadata"));
 
   //connect signal and slots
   q->connect(this->ImportDialog, SIGNAL(filesSelected(QStringList)),

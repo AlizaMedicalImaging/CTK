@@ -25,11 +25,14 @@
 // Qt includes
 #include <QApplication>
 #include <QClipboard>
-#include <QDesktopServices>
 #include <QSortFilterProxyModel>
 #include <QString>
 #include <QStringList>
 #include <QUrl>
+
+#if 0
+#include <QDesktopServices>
+#endif
 
 //CTK includes
 #include <ctkDICOMObjectModel.h>
@@ -145,7 +148,11 @@ void ctkDICOMObjectListWidgetPrivate::populateDICOMObjectTreeView(const QString&
   this->dicomObjectModel->setFile(fileName);
   this->filterModel->invalidate();
   this->dcmObjectTreeView->setModel(this->filterModel);
+#if 0
   this->dcmObjectTreeView->expandAll();
+#else
+  this->dcmObjectTreeView->collapseAll();
+#endif
 }
 
 // --------------------------------------------------------------------------
@@ -198,32 +205,24 @@ ctkDICOMObjectListWidget::ctkDICOMObjectListWidget(QWidget* _parent):Superclass(
   d_ptr(new ctkDICOMObjectListWidgetPrivate)
 {
   Q_D(ctkDICOMObjectListWidget);
-
   d->setupUi(this);
-
   d->metadataSearchBox->setAlwaysShowClearIcon(true);
   d->metadataSearchBox->setShowSearchIcon(true);
-
   d->dicomObjectModel = new ctkDICOMObjectModel(this);
   d->filterModel = new qRecursiveTreeProxyFilter(this);
   d->filterModel->setSourceModel(d->dicomObjectModel);
-
   d->fileSliderWidget->setMaximum(1);
   d->fileSliderWidget->setMinimum(1);
   d->fileSliderWidget->setPageStep(1);
-
-  connect(d->fileSliderWidget, SIGNAL(valueChanged(double)), this, SLOT(updateWidget()));
-  connect(d->dcmObjectTreeView, SIGNAL(doubleClicked(const QModelIndex&)),
-    this, SLOT(itemDoubleClicked(const QModelIndex&)));
-  connect(d->copyPathPushButton , SIGNAL(clicked(bool)),this, SLOT(copyPath()));
-
-  connect(d->expandAllPushButton, SIGNAL(clicked(bool)), d->dcmObjectTreeView, SLOT(expandAll()));
-  connect(d->collapseAllPushButton, SIGNAL(clicked(bool)), d->dcmObjectTreeView, SLOT(collapseAll()));
-  connect(d->copyMetadataPushButton, SIGNAL(clicked(bool)), this, SLOT(copyMetadata()));
-  connect(d->copyAllFilesMetadataPushButton, SIGNAL(clicked(bool)), this, SLOT(copyAllFilesMetadata()));
-
-  QObject::connect(d->metadataSearchBox, SIGNAL(textChanged(QString)), this, SLOT(setFilterExpression(QString)));
-  QObject::connect(d->metadataSearchBox, SIGNAL(textChanged(QString)), this, SLOT(onFilterChanged()));
+  connect(d->fileSliderWidget,              SIGNAL(valueChanged(double)),             this,                SLOT(updateWidget()));
+  connect(d->dcmObjectTreeView,             SIGNAL(doubleClicked(const QModelIndex&)),this,                SLOT(itemDoubleClicked(const QModelIndex&)));
+  connect(d->copyPathPushButton ,           SIGNAL(clicked(bool)),                    this,                SLOT(copyPath()));
+  connect(d->expandAllPushButton,           SIGNAL(clicked(bool)),                    d->dcmObjectTreeView,SLOT(expandAll()));
+  connect(d->collapseAllPushButton,         SIGNAL(clicked(bool)),                    d->dcmObjectTreeView,SLOT(collapseAll()));
+  connect(d->copyMetadataPushButton,        SIGNAL(clicked(bool)),                    this,                SLOT(copyMetadata()));
+  connect(d->copyAllFilesMetadataPushButton,SIGNAL(clicked(bool)),                    this,                SLOT(copyAllFilesMetadata()));
+  QObject::connect(d->metadataSearchBox,    SIGNAL(textChanged(QString)),             this,                SLOT(setFilterExpression(QString)));
+  QObject::connect(d->metadataSearchBox,    SIGNAL(textChanged(QString)),             this,                SLOT(onFilterChanged()));
 }
 
 //----------------------------------------------------------------------------
@@ -263,7 +262,6 @@ void ctkDICOMObjectListWidget::setFileList(const QStringList& fileList)
     d->currentFile.clear();
     d->dicomObjectModel->clear();
     }
-
   d->setPathLabel(d->currentFile);
   d->fileSliderWidget->setVisible(d->fileList.size() > 1);
 }
@@ -285,18 +283,26 @@ QStringList ctkDICOMObjectListWidget::fileList()
 // --------------------------------------------------------------------------
 void ctkDICOMObjectListWidget::openLookupUrl(QString tag)
 {
+#if 0
   QString lookupUrl = "http://dicomlookup.com/lookup.asp?sw=Tnumber&q=" + tag;
   QUrl url(lookupUrl);
   QDesktopServices::openUrl(url);
+#else
+  (void)tag;
+#endif
 }
 
 // --------------------------------------------------------------------------
 void ctkDICOMObjectListWidget::itemDoubleClicked(const QModelIndex& index)
 {
+#if 0
   Q_D(ctkDICOMObjectListWidget);
   QModelIndex tagIndex = d->filterModel->index(index.row(), 0, index.parent());
   QString tag = d->filterModel->data(tagIndex).toString();
   openLookupUrl(tag);
+#else
+  (void)index;
+#endif
 }
 
 // --------------------------------------------------------------------------
@@ -326,7 +332,6 @@ QString ctkDICOMObjectListWidget::metadataAsText(bool allFiles /*=false*/)
     foreach(QString fileName, d->fileList)
       {
       // copy metadata of all files
-
       ctkDICOMObjectModel* aDicomObjectModel = new ctkDICOMObjectModel();
       aDicomObjectModel->setFile(fileName);
 
