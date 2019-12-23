@@ -36,8 +36,8 @@ int main(int argc, char** argv)
                        app.organizationName(), app.applicationName());
     const QString db = settings.value(QString("DatabaseDirectory"), QString("")).toString();
     theme = settings.value(QString("Theme"), QString("Dark Fusion")).toString();
-    ff    = settings.value(QString("FontFamily"), QString("Serif")).toString();
-    fpt   = settings.value(QString("ptFontSize"), -1).toDouble();
+    ff    = settings.value(QString("FontFamily"), QString("")).toString();
+    fpt   = settings.value(QString("ptFontSize"), -1.0).toDouble();
     if (db.isEmpty())
     {
       const QString h = QDir::toNativeSeparators(
@@ -70,16 +70,21 @@ int main(int argc, char** argv)
       app.setStyle(QString("Plastique"));
 #endif
       app.setPalette(darkPalette);
-      QFont f = app.font();
-      if (!ff.isEmpty())
-      {
-        f.setFamily(ff);
-      }
-      if (static_cast<int>(fpt) != -1)
-      {
-        f.setPointSizeF(fpt);
-      }
-      app.setFont(f);
+	  const bool ff_empty = ff.isEmpty();
+	  const int ftp_ = static_cast<int>(fpt);
+	  if (!ff_empty || (ftp_ != -1))
+	  {
+        QFont f = app.font();
+        if (!ff_empty)
+        {
+          f.setFamily(ff);
+        }
+        if (ftp_ != -1)
+        {
+          f.setPointSizeF(fpt);
+        }
+        app.setFont(f);
+	  }
     }
   }
   ctkDICOMBrowser DICOMBrowser;
