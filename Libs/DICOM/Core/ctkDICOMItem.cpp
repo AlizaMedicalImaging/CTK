@@ -945,7 +945,7 @@ bool ctkDICOMItem::SaveToFile(const QString& filePath) const
     return false;
   }
   DcmFileFormat* fileformat = new DcmFileFormat ( dynamic_cast<DcmDataset*>(d->m_DcmItem) );
-  OFCondition status = fileformat->saveFile ( qPrintable(QDir::toNativeSeparators( filePath)) );
+  OFCondition status = fileformat->saveFile(QDir::toNativeSeparators(filePath).toLocal8Bit().data());
   delete fileformat;
   return status.good();
 }

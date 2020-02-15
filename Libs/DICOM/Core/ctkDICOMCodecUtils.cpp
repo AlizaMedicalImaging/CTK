@@ -44,6 +44,8 @@ QString ctkDICOMCodecUtils::toUTF8(const QByteArray* ba, const char* charset, bo
     if (ok) *ok = true;
     return QString::fromLatin1(ba->constData());
   }
+  if (ok) *ok = false;
+  //
   const QStringList l = cs.split(QString("\\"), QString::KeepEmptyParts);
   bool iso2022 = false;
   for (int x = 0; x < l.size(); x++)
@@ -55,7 +57,6 @@ QString ctkDICOMCodecUtils::toUTF8(const QByteArray* ba, const char* charset, bo
       break;
     }
   }
-  if (ok) *ok = false;
   // ISO 2022
   if (iso2022)
   {

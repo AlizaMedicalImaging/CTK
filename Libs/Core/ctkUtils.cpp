@@ -48,7 +48,7 @@ void ctk::qListToSTLVector(const QStringList& list,
     {
     // Allocate memory
     char* str = new char[list[i].size()+1];
-    strcpy(str, list[i].toLatin1());
+    strcpy(str, list[i].toLocal8Bit());
     vector[i] = str;
     }
 }

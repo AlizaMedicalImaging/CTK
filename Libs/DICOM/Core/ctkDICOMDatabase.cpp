@@ -885,7 +885,7 @@ bool ctkDICOMDatabasePrivate::storeThumbnailFile(const QString& originalFilePath
   }
   QDir(q->databaseDirectory() + QDir::separator() + QString("thumbs") + QDir::separator())
     .mkpath(studySeriesDirectory);
-  DicomImage dcmImage(QDir::toNativeSeparators(originalFilePath).toLatin1());
+  DicomImage dcmImage(QDir::toNativeSeparators(originalFilePath).toLocal8Bit());
   return this->ThumbnailGenerator->generateThumbnail(&dcmImage, thumbnailPath);
 }
 
@@ -2146,7 +2146,7 @@ void ctkDICOMDatabase::loadFileHeader (QString fileName)
   Q_D(ctkDICOMDatabase);
   d->LoadedHeader.clear();
   DcmFileFormat fileFormat;
-  OFCondition status = fileFormat.loadFile(fileName.toLatin1().data());
+  OFCondition status = fileFormat.loadFile(fileName.toLocal8Bit().data());
   if (status.good())
   {
     DcmDataset *dataset = fileFormat.getDataset();
