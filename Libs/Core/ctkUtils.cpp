@@ -36,24 +36,6 @@
 #endif
 
 //------------------------------------------------------------------------------
-void ctk::qListToSTLVector(const QStringList& list,
-                                 std::vector<char*>& vector)
-{
-  // Resize if required
-  if (list.count() != static_cast<int>(vector.size()))
-    {
-    vector.resize(list.count());
-    }
-  for (int i = 0; i < list.count(); ++i)
-    {
-    // Allocate memory
-    char* str = new char[list[i].size()+1];
-    strcpy(str, list[i].toLocal8Bit());
-    vector[i] = str;
-    }
-}
-
-//------------------------------------------------------------------------------
 namespace
 {
 /// Convert QString to std::string
