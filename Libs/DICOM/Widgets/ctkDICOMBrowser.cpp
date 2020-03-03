@@ -1306,7 +1306,7 @@ void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
 {
   Q_D(ctkDICOMBrowser);
   const QString sep = QDir::separator();
-  const QString pref = dirPath + sep + QDateTime::currentDateTime().toString("yyyyMMddHHmmsszzz");
+  const QString pref = dirPath + sep + QDateTime::currentDateTime().toString("yyyyMMddHHmmsszzz") + sep;
   foreach (const QString& uid, uids)
   {
     QStringList filesForSeries = d->DICOMDatabase->filesForSeries(uid);
