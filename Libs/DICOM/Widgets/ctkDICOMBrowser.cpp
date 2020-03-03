@@ -836,15 +836,9 @@ void ctkDICOMBrowser::onRepairAction()
         unavailableFileNames.append(*it+"\n");
       }
 
-      QString firstFile (*(fileList.constBegin()));
-      QHash<QString,QString> descriptions (d->DICOMDatabase->descriptionsForFile(firstFile));
-
-      repairMessageBox->setText(
-        tr("The files for the following series are not available on the disk:") + "\n" +
-        tr("Patient Name")      + ": " + descriptions["PatientsName"]           + "\n" +
-        tr("Study Desciption")  + ": " + descriptions["StudyDescription"]       + "\n" +
-        tr("Series Desciption") + ": " + descriptions["SeriesDescription"]      + "\n" +
-        tr("Do you want to remove the series from the DICOM database?"));
+      repairMessageBox->setText(tr(
+        "The files for the following series are not available on the disk:\n"
+        "Do you want to remove the series from the DICOM database?"));
 
       repairMessageBox->setDetailedText(unavailableFileNames);
 
@@ -1310,54 +1304,23 @@ void ctkDICOMBrowser::onSeriesRightClicked(const QPoint &point)
 //----------------------------------------------------------------------------
 void ctkDICOMBrowser::exportSeries(QString dirPath, QStringList uids)
 {
-#ifndef _MSC_VER
-#warning "TODO exportSeries"
-#endif
   Q_D(ctkDICOMBrowser);
-
+  const QString sep = QDir::separator();
+  const QString pref = dirPath + sep + QDateTime::currentDateTime().toString("yyyyMMddHHmmsszzz");
   foreach (const QString& uid, uids)
   {
     QStringList filesForSeries = d->DICOMDatabase->filesForSeries(uid);
-
     // Use the first file to get the overall series information
-    QString firstFilePath = filesForSeries[0];
-    QHash<QString,QString> descriptions (d->DICOMDatabase->descriptionsForFile(firstFilePath));
-    QString patientName = descriptions["PatientsName"];
-    QString patientIDTag = QString("0010,0020");
-    QString patientID = d->DICOMDatabase->fileValue(firstFilePath, patientIDTag);
-    QString studyDescription = descriptions["StudyDescription"];
-    QString seriesDescription = descriptions["SeriesDescription"];
-    QString studyDateTag = QString("0008,0020");
-    QString studyDate = d->DICOMDatabase->fileValue(firstFilePath,studyDateTag);
-    QString seriesNumberTag = QString("0020,0011");
-    QString seriesNumber = d->DICOMDatabase->fileValue(firstFilePath,seriesNumberTag);
-
-    QString sep = "/";
-    QString nameSep = "-";
-    QString destinationDir = dirPath + sep + patientID; // QDateTime::currentDateTime().toString("yyyyMMddHHmmsszzz");
-    if (!patientName.isEmpty())
-    {
-      destinationDir += nameSep + patientName;
-    }
-    destinationDir += sep + studyDate;
-    if (!studyDescription.isEmpty())
-    {
-      destinationDir += nameSep + studyDescription;
-    }
-    destinationDir += sep + seriesNumber;
-    if (!seriesDescription.isEmpty())
-    {
-      destinationDir += nameSep + seriesDescription;
-    }
-    destinationDir += sep;
-
-    // make sure only ascii characters are in the directory path
-    destinationDir = destinationDir.toLatin1();
-    // replace any question marks that were used as replacements for non ascii
-    // characters with underscore
+    const QString firstFilePath = filesForSeries[0];
+    const QString patientID    = d->DICOMDatabase->fileValue(firstFilePath,QString("0010,0020"));
+    const QString studyDate    = d->DICOMDatabase->fileValue(firstFilePath,QString("0008,0020"));
+    const QString seriesNumber = d->DICOMDatabase->fileValue(firstFilePath,QString("0020,0011"));
+    QString destinationDir =
+        patientID.toLatin1() + sep +
+        studyDate + sep +
+        seriesNumber + sep;
     destinationDir.replace("?", "_");
-
-    // create the destination directory if necessary
+    destinationDir.prepend(pref);
     if (!QDir().exists(destinationDir))
     {
       if (!QDir().mkpath(destinationDir))
