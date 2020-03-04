@@ -43,6 +43,7 @@
 #include <QWidgetAction>
 #include <QtGlobal>
 #include <QObject>
+#include <QFont>
 
 // ctkWidgets includes
 #include "ctkDirectoryButton.h"
@@ -207,6 +208,15 @@ ctkDICOMBrowserPrivate::ctkDICOMBrowserPrivate(ctkDICOMBrowser* parent, QSharedP
 //----------------------------------------------------------------------------
 ctkDICOMBrowserPrivate::~ctkDICOMBrowserPrivate()
 {
+  /*
+  {
+    QSettings settings(QSettings::IniFormat,QSettings::UserScope,qApp->organizationName(),qApp->applicationName());
+    settings.beginGroup(QString("GlobalSettings"));
+    settings.setValue(QString("ptFontSize"), QVariant(static_cast<double>(pt_doubleSpinBox->value())));
+    settings.endGroup();
+    settings.sync();
+  }
+  */
   this->DICOMIndexer->waitForImportFinished();
   if ( UpdateSchemaProgress )
   {
@@ -367,6 +377,13 @@ void ctkDICOMBrowserPrivate::init()
 
   q->connect(this->QueryRetrieveWidget, SIGNAL(canceled()), this->QueryRetrieveWidget, SLOT(hide()) );
   q->connect(this->QueryRetrieveWidget, SIGNAL(canceled()), q, SLOT(onQueryRetrieveFinished()) );
+
+  //
+  {
+    QFont f = qApp->font();
+	this->pt_doubleSpinBox->setValue(f.pointSizeF());
+  }
+  q->connect(this->pt_doubleSpinBox, SIGNAL(valueChanged(double)), q, SLOT(update_font_pt(double)));
 }
 
 //----------------------------------------------------------------------------
@@ -1709,4 +1726,11 @@ void ctkDICOMBrowser::onIndexingComplete(int patientsAdded, int studiesAdded, in
 
   // allow users of this widget to know that the process has finished
   emit directoryImported();
+}
+
+void ctkDICOMBrowser::update_font_pt(double x)
+{
+	QFont f = qApp->font();
+	f.setPointSizeF(x);
+	qApp->setFont(f);
 }

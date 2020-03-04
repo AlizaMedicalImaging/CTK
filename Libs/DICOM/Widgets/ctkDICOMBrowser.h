@@ -224,6 +224,8 @@ public Q_SLOTS:
 
   void removeSelectedItems(ctkDICOMModel::IndexType level);
 
+  void update_font_pt(double);
+
 Q_SIGNALS:
   /// Emitted when directory is changed
   void databaseDirectoryChanged(const QString&);

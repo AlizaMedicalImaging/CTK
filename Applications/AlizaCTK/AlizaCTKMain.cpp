@@ -30,14 +30,10 @@ int main(int argc, char** argv)
   app.setApplicationName("AlizaCTK");
   {
     QString theme;
-    QString ff;
-    double fpt;
     QSettings settings(QSettings::IniFormat, QSettings::UserScope,
                        app.organizationName(), app.applicationName());
     const QString db = settings.value(QString("DatabaseDirectory"), QString("")).toString();
     theme = settings.value(QString("Theme"), QString("Dark Fusion")).toString();
-    ff    = settings.value(QString("FontFamily"), QString("")).toString();
-    fpt   = settings.value(QString("ptFontSize"), -1.0).toDouble();
     if (db.isEmpty())
     {
       const QString h = QDir::toNativeSeparators(
@@ -70,21 +66,26 @@ int main(int argc, char** argv)
       app.setStyle(QString("Plastique"));
 #endif
       app.setPalette(darkPalette);
-	  const bool ff_empty = ff.isEmpty();
-	  const int ftp_ = static_cast<int>(fpt);
-	  if (!ff_empty || (ftp_ != -1))
-	  {
+      /*
+      settings.setFallbacksEnabled(true);
+      settings.beginGroup(QString("GlobalSettings"));
+      double fpt = settings.value(QString("ptFontSize"), -1.0).toDouble();
+      settings.endGroup();
+      if (fpt <= 0.0)
+      {
         QFont f = app.font();
-        if (!ff_empty)
+        fpt = f.pointSizeF();
+        if (fpt > 0)
         {
-          f.setFamily(ff);
+            f.setPointSizeF(fpt);
+            app.setFont(f);
+            settings.beginGroup(QString("GlobalSettings"));
+            settings.setValue(QString("ptFontSize"), QVariant(fpt));
+            settings.endGroup();
+            settings.sync();
         }
-        if (ftp_ != -1)
-        {
-          f.setPointSizeF(fpt);
-        }
-        app.setFont(f);
-	  }
+      }
+      */
     }
   }
   ctkDICOMBrowser DICOMBrowser;
