@@ -273,6 +273,7 @@ install(FILES
 # Testing
 #
 include(CTest)
+option(BUILD_TESTING "BUILD_TESTING (1)" OFF)
 mark_as_advanced(BUILD_TESTING)
 mark_as_superbuild(BUILD_TESTING)
 
