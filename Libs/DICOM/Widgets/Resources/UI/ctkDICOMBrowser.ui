@@ -40,6 +40,109 @@
     </widget>
    </item>
    <item>
+    <widget class="QFrame" name="frame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <property name="margin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QDoubleSpinBox" name="pt_doubleSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="prefix">
+         <string/>
+        </property>
+        <property name="suffix">
+         <string> pt</string>
+        </property>
+        <property name="minimum">
+         <double>5.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>99.900000000000006</double>
+        </property>
+        <property name="singleStep">
+         <double>0.200000000000000</double>
+        </property>
+        <property name="value">
+         <double>12.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QFrame" name="InformationMessageFrame">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <property name="margin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="InformationMessageLabel">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Information</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="InformationMessageDismissButton">
+           <property name="text">
+            <string>OK</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QFrame" name="DatabaseDirectoryProblemFrame">
      <property name="styleSheet">
       <string notr="true">background-color: rgb(115, 115, 70);</string>
@@ -118,41 +221,6 @@
     </layout>
    </item>
    <item>
-    <widget class="QFrame" name="InformationMessageFrame">
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <property name="margin">
-       <number>0</number>
-      </property>
-      <item>
-       <widget class="QLabel" name="InformationMessageLabel">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Information</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="InformationMessageDismissButton">
-        <property name="text">
-         <string>OK</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QFrame" name="ProgressFrame">
      <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
@@ -212,71 +280,6 @@
    </item>
    <item>
     <widget class="ctkDirectoryButton" name="DirectoryButton" native="true"/>
-   </item>
-   <item>
-    <widget class="QFrame" name="SettingsFrame">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <property name="spacing">
-       <number>0</number>
-      </property>
-      <property name="margin">
-       <number>4</number>
-      </property>
-      <item>
-       <widget class="QDoubleSpinBox" name="pt_doubleSpinBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="prefix">
-         <string/>
-        </property>
-        <property name="suffix">
-         <string> pt</string>
-        </property>
-        <property name="minimum">
-         <double>5.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>99.900000000000006</double>
-        </property>
-        <property name="singleStep">
-         <double>0.200000000000000</double>
-        </property>
-        <property name="value">
-         <double>12.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </widget>
    </item>
   </layout>
   <action name="ActionImport">
@@ -358,10 +361,11 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>pt_doubleSpinBox</tabstop>
+  <tabstop>InformationMessageDismissButton</tabstop>
   <tabstop>UpdateDatabaseButton</tabstop>
   <tabstop>CreateNewDatabaseButton</tabstop>
   <tabstop>SelectDatabaseDirectoryButton</tabstop>
-  <tabstop>InformationMessageDismissButton</tabstop>
   <tabstop>ProgressCancelButton</tabstop>
   <tabstop>ProgressDetailLineEdit</tabstop>
  </tabstops>
